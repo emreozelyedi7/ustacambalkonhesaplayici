@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const calculateBtn = document.getElementById('calculateBtn');
     
-    // BUTONLARI SEÇELİM
+    // BUTONLAR
     const downloadBtn = document.getElementById('downloadBtn'); 
     const shareBtn = document.getElementById('shareBtn'); 
     
@@ -118,7 +118,6 @@ document.addEventListener('DOMContentLoaded', function() {
         resultArea.querySelector('.result-big').textContent = fmtTL.format(totalTL);
         detailInfo.innerHTML = `Toplam En: ${totalWidth} cm | Yükseklik: ${h} cm <br> Alan: ${area.toFixed(2)} m² <br> (${fmtUSD.format(totalUSD)})`;
 
-        // Hesaplama başarılıysa butonları göster
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
 
@@ -130,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // --- AKILLI GÖRSEL OLUŞTURUCU (METİN KAYDIRMALI) ---
+    // --- GÖRSEL OLUŞTURUCU ---
     function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -153,13 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- Yazı Başlangıç Konumu ---
         let cursorY = 50 + logoHeight + 80; 
 
-        // --- Ürün Adı (Satır Kaydırma) ---
+        // --- Ürün Adı (Düzeltildi: Olduğu gibi yazıyor) ---
         ctx.fillStyle = '#333333';
         const fontSize = 70;
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
         ctx.textAlign = 'center';
         
-        const productName = lastCalculation.productName.toUpperCase();
+        // BURADAKİ uppercase komutunu kaldırdık. Artık "Isıcamlı" ise "Isıcamlı" yazar.
+        const productName = lastCalculation.productName; 
+        
         const maxWidth = 950;
         const lineHeight = 80;
 
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, size / 2, cursorY);
 
-        // --- Çizgi ve Diğerleri ---
+        // --- Çizgi ---
         cursorY += 40; 
         ctx.beginPath();
         ctx.moveTo(200, cursorY);
@@ -190,6 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.lineWidth = 5;
         ctx.stroke();
 
+        // --- Ölçüler ---
         cursorY += 80;
         ctx.fillStyle = '#666666';
         ctx.font = '50px Segoe UI, Arial';
@@ -199,6 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = 'italic 30px Segoe UI, Arial';
         ctx.fillText(lastCalculation.details, size / 2, cursorY);
 
+        // --- Fiyat ---
         cursorY += 150; 
         ctx.fillStyle = '#28a745'; 
         ctx.font = 'bold 130px Segoe UI, Arial';
