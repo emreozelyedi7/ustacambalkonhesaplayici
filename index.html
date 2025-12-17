@@ -3,54 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>M² Hesaplayıcı</title>
+  <title>M² ve Teklif Hazırlayıcı</title>
   <style>
     body { 
         font-family: 'Segoe UI', sans-serif; 
         background-color: #f0f2f5; 
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
+        margin: 0; padding: 0;
+        display: flex; justify-content: center;
         min-height: 100vh;
     }
     
-    /* Ana Taşıyıcı: Telefonda tam genişlik, bilgisayarda ortada durur */
     .main-wrapper {
-        width: 100%;
-        max-width: 400px; /* Telefon genişliği sınırı */
-        background: white;
-        padding: 20px;
+        width: 100%; max-width: 400px;
+        background: white; padding: 20px;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        min-height: 100vh; /* Tüm ekranı kaplasın */
+        min-height: 100vh;
     }
 
-    /* Logo Ayarları */
-    .logo-container {
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .logo-container img {
-        max-width: 200px; /* Logoyu mobilde çok devasa yapmasın */
-        height: auto;
-    }
+    /* Logo */
+    .logo-container { text-align: center; margin-bottom: 10px; }
+    .logo-container img { max-width: 200px; height: auto; }
 
-    h2 { text-align: center; color: #333; margin-top: 0; }
-    .container { background: white; padding: 5px; border-radius: 8px; }
-    
-    label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #555; }
-    input, select { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;}
+    /* Genel Stiller */
+    label { display: block; margin-top: 15px; font-weight: bold; font-size: 13px; color: #555; }
+    input, select { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; transition: border 0.3s;}
+    input:focus, select:focus { border-color: #007bff; outline: none; }
     
     .rate-box { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 20px; }
     .rate-box label { color: #0d47a1; margin-top: 0; }
     .rate-box input { border-color: #90caf9; font-weight: bold; color: #0d47a1; font-size: 18px; }
 
+    /* Butonlar */
     button { width: 100%; background-color: #28a745; color: white; padding: 15px; border: none; margin-top: 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
     button:hover { background-color: #218838; }
     button.secondary { background-color: #007bff; margin-top: 10px; }
-    button.secondary:hover { background-color: #0069d9; }
     button.danger { background-color: #dc3545; margin-top: 5px; }
     
+    /* İndirme Butonu (Özel) */
+    #downloadBtn { 
+      background-color: #ff9800; 
+      display: none; /* Başlangıçta gizli */
+      margin-top: 15px;
+    }
+    #downloadBtn:hover { background-color: #e68900; }
+
     .result { margin-top: 20px; padding: 20px; background-color: #343a40; border-radius: 8px; text-align: center; color: #fff; }
     .result-big { font-size: 28px; font-weight: bold; color: #28a745; display: block; margin-top: 5px;}
     
@@ -58,13 +54,17 @@
     .nav { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
     .nav a { text-decoration: none; color: #666; font-size: 14px; cursor: pointer; padding: 10px; }
     .nav a.active { color: #007bff; font-weight: bold; border-bottom: 3px solid #007bff; margin-bottom: -12px; }
+
+    /* Çoklu En Girişi Düzeni */
+    .width-group { display: flex; gap: 5px; }
+    .width-group input { text-align: center; }
   </style>
 </head>
 <body>
 
 <div class="main-wrapper">
   <div class="logo-container">
-      <img src="image_0.png" alt="Logo">
+      <img src="image_0.png" id="mainLogo" alt="Logo">
   </div>
 
   <div class="nav">
@@ -83,24 +83,25 @@
       <option value="">Seçiniz...</option>
     </select>
 
-    <div style="display: flex; gap: 15px;">
-      <div style="flex:1;">
-        <label>Genişlik (cm):</label>
-        <input type="number" id="width" placeholder="100">
-      </div>
-      <div style="flex:1;">
-        <label>Yükseklik (cm):</label>
-        <input type="number" id="height" placeholder="200">
-      </div>
+    <label>Balkon En Ölçüleri (cm) - (Boş kalabilir):</label>
+    <div class="width-group">
+      <input type="number" id="w1" placeholder="En 1">
+      <input type="number" id="w2" placeholder="En 2">
+      <input type="number" id="w3" placeholder="En 3">
     </div>
+
+    <label>Yükseklik (cm):</label>
+    <input type="number" id="height" placeholder="Örn: 200">
 
     <button id="calculateBtn">HESAPLA</button>
 
     <div class="result" id="resultArea">
       <span>Tutar:</span>
       <span class="result-big">0.00 ₺</span>
-      <span style="font-size: 12px; opacity: 0.7; display:block; margin-top:5px;" id="usdDetail"></span>
+      <span style="font-size: 12px; opacity: 0.7; display:block; margin-top:5px;" id="detailInfo"></span>
     </div>
+
+    <button id="downloadBtn">📸 TEKLİF GÖRSELİ İNDİR</button>
   </div>
 
   <div id="settings-section" class="container hidden">
@@ -111,9 +112,7 @@
     <input type="number" id="newProductPrice" placeholder="Örn: 100">
 
     <button class="secondary" id="saveProductBtn">KAYDET</button>
-    
     <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-    
     <label>Kayıtlı Ürünler:</label>
     <select id="deleteSelect"></select>
     <button class="danger" id="deleteProductBtn">SİL</button>
