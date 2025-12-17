@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>M² ve Teklif Hazırlayıcı</title>
+  <title>Fiyat Teklifi Oluşturucu</title>
   <style>
     body { 
         font-family: 'Segoe UI', sans-serif; 
@@ -20,11 +20,9 @@
         min-height: 100vh;
     }
 
-    /* Logo */
     .logo-container { text-align: center; margin-bottom: 10px; }
     .logo-container img { max-width: 200px; height: auto; }
 
-    /* Genel Stiller */
     label { display: block; margin-top: 15px; font-weight: bold; font-size: 13px; color: #555; }
     input, select { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; transition: border 0.3s;}
     input:focus, select:focus { border-color: #007bff; outline: none; }
@@ -33,19 +31,22 @@
     .rate-box label { color: #0d47a1; margin-top: 0; }
     .rate-box input { border-color: #90caf9; font-weight: bold; color: #0d47a1; font-size: 18px; }
 
-    /* Butonlar */
     button { width: 100%; background-color: #28a745; color: white; padding: 15px; border: none; margin-top: 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
     button:hover { background-color: #218838; }
     button.secondary { background-color: #007bff; margin-top: 10px; }
     button.danger { background-color: #dc3545; margin-top: 5px; }
     
-    /* İndirme Butonu (Özel) */
+    /* İNDİRME ve PAYLAŞMA BUTONLARI */
     #downloadBtn { 
       background-color: #ff9800; 
-      display: none; /* Başlangıçta gizli */
+      display: none; 
       margin-top: 15px;
     }
-    #downloadBtn:hover { background-color: #e68900; }
+    #shareBtn {
+      background-color: #007bff;
+      display: none; /* Gizli başlar, hesaplayınca açılır */
+      margin-top: 10px;
+    }
 
     .result { margin-top: 20px; padding: 20px; background-color: #343a40; border-radius: 8px; text-align: center; color: #fff; }
     .result-big { font-size: 28px; font-weight: bold; color: #28a745; display: block; margin-top: 5px;}
@@ -55,7 +56,6 @@
     .nav a { text-decoration: none; color: #666; font-size: 14px; cursor: pointer; padding: 10px; }
     .nav a.active { color: #007bff; font-weight: bold; border-bottom: 3px solid #007bff; margin-bottom: -12px; }
 
-    /* Çoklu En Girişi Düzeni */
     .width-group { display: flex; gap: 5px; }
     .width-group input { text-align: center; }
   </style>
@@ -83,7 +83,7 @@
       <option value="">Seçiniz...</option>
     </select>
 
-    <label>Balkon En Ölçüleri (cm) - (Boş kalabilir):</label>
+    <label>Balkon En Ölçüleri (cm):</label>
     <div class="width-group">
       <input type="number" id="w1" placeholder="En 1">
       <input type="number" id="w2" placeholder="En 2">
@@ -101,7 +101,8 @@
       <span style="font-size: 12px; opacity: 0.7; display:block; margin-top:5px;" id="detailInfo"></span>
     </div>
 
-    <button id="downloadBtn">📸 TEKLİF GÖRSELİ İNDİR</button>
+    <button id="downloadBtn">📸 Görseli Galeriye İndir</button>
+    <button id="shareBtn">📤 Görseli Müşteriyle Paylaş</button>
   </div>
 
   <div id="settings-section" class="container hidden">
@@ -119,6 +120,6 @@
   </div>
 </div>
 
-<script src="script.js?v=2"></script>
+<script src="script.js?v=3"></script>
 </body>
 </html>

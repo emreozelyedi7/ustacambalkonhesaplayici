@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- HTML Element Seçimleri ---
+    // --- ELEMENT SEÇİMLERİ ---
     const navCalc = document.getElementById('nav-calc');
     const navSettings = document.getElementById('nav-settings');
     const calcSection = document.getElementById('calc-section');
@@ -14,8 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const heightInput = document.getElementById('height');
     
     const calculateBtn = document.getElementById('calculateBtn');
+    
+    // BUTONLARI SEÇELİM
     const downloadBtn = document.getElementById('downloadBtn'); 
     const shareBtn = document.getElementById('shareBtn'); 
+    
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
     const mainLogo = document.getElementById('mainLogo'); 
@@ -28,11 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let lastCalculation = null;
 
-    // --- Başlangıç Ayarları ---
+    // --- BAŞLANGIÇ ---
     loadProducts();
     loadRate();
 
-    // --- Sekme Geçişleri ---
+    // --- SEKME GEÇİŞLERİ ---
     navCalc.addEventListener('click', () => {
         calcSection.classList.remove('hidden');
         settingsSection.classList.add('hidden');
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
-    // --- Ürün Kaydetme ---
+    // --- KAYIT İŞLEMLERİ ---
     saveProductBtn.addEventListener('click', () => {
         const name = newProductName.value.trim();
         const price = parseFloat(newProductPrice.value);
@@ -86,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- HESAPLAMA ---
+    // --- HESAPLAMA MANTIĞI ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
@@ -115,8 +118,9 @@ document.addEventListener('DOMContentLoaded', function() {
         resultArea.querySelector('.result-big').textContent = fmtTL.format(totalTL);
         detailInfo.innerHTML = `Toplam En: ${totalWidth} cm | Yükseklik: ${h} cm <br> Alan: ${area.toFixed(2)} m² <br> (${fmtUSD.format(totalUSD)})`;
 
-        downloadBtn.style.display = 'block';
-        shareBtn.style.display = 'block';
+        // Hesaplama başarılıysa butonları göster
+        if(downloadBtn) downloadBtn.style.display = 'block';
+        if(shareBtn) shareBtn.style.display = 'block';
 
         lastCalculation = {
             productName: selectedData.name,
@@ -126,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // --- AKILLI GÖRSEL OLUŞTURUCU ---
+    // --- AKILLI GÖRSEL OLUŞTURUCU (METİN KAYDIRMALI) ---
     function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -140,50 +144,45 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, size, size);
 
-        // --- Logo ---
+        // Logo
         const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (size - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 50, logoWidth, logoHeight);
 
-        // --- Dinamik İmleç (Y Konumu) ---
-        // Her şeyi bu değişkene göre çizeceğiz. Logo bitişinden başlıyoruz.
+        // --- Yazı Başlangıç Konumu ---
         let cursorY = 50 + logoHeight + 80; 
 
-        // --- Ürün Adı (Satır Kaydırmalı) ---
+        // --- Ürün Adı (Satır Kaydırma) ---
         ctx.fillStyle = '#333333';
         const fontSize = 70;
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
         ctx.textAlign = 'center';
         
         const productName = lastCalculation.productName.toUpperCase();
-        const maxWidth = 950; // Kenarlardan boşluk
+        const maxWidth = 950;
         const lineHeight = 80;
 
-        // Metni kelimelere böl ve sığdır
         const words = productName.split(' ');
         let line = '';
         
         for(let n = 0; n < words.length; n++) {
-            // Test satırı oluştur
             const testLine = line + words[n] + ' ';
             const metrics = ctx.measureText(testLine);
             const testWidth = metrics.width;
             
-            // Eğer test satırı çok genişse ve tek kelime değilse
             if (testWidth > maxWidth && n > 0) {
                 ctx.fillText(line, size / 2, cursorY);
                 line = words[n] + ' ';
-                cursorY += lineHeight; // Bir satır aşağı kay
+                cursorY += lineHeight;
             } else {
                 line = testLine;
             }
         }
-        // Son kalan satırı yaz
         ctx.fillText(line, size / 2, cursorY);
 
-        // --- Ayırıcı Çizgi ---
-        cursorY += 40; // Yazıdan biraz uzaklaş
+        // --- Çizgi ve Diğerleri ---
+        cursorY += 40; 
         ctx.beginPath();
         ctx.moveTo(200, cursorY);
         ctx.lineTo(880, cursorY);
@@ -191,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.lineWidth = 5;
         ctx.stroke();
 
-        // --- Ölçüler ---
         cursorY += 80;
         ctx.fillStyle = '#666666';
         ctx.font = '50px Segoe UI, Arial';
@@ -201,31 +199,25 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = 'italic 30px Segoe UI, Arial';
         ctx.fillText(lastCalculation.details, size / 2, cursorY);
 
-        // --- FİYAT ---
-        // Fiyatı sayfanın ortasına değil, kalan boşluğa göre hizalayalım
-        // Ama alt şeride çarpmaması lazım.
-        cursorY += 150; // Biraz daha boşluk
+        cursorY += 150; 
         ctx.fillStyle = '#28a745'; 
         ctx.font = 'bold 130px Segoe UI, Arial';
         ctx.fillText(lastCalculation.totalPrice, size / 2, cursorY);
 
-
-        // --- ALT ŞERİT (Footer) ---
-        // Burası hep en altta sabit kalacak
+        // --- Alt Şerit ---
         const footerHeight = 200;
         const footerY = size - footerHeight;
         
-        ctx.fillStyle = '#F37021'; // Turuncu
+        ctx.fillStyle = '#F37021'; 
         ctx.fillRect(0, footerY, size, footerHeight);
 
-        ctx.fillStyle = '#ffffff'; // Beyaz Yazı
+        ctx.fillStyle = '#ffffff'; 
         ctx.font = 'bold 40px Segoe UI, Arial';
         ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", size / 2, footerY + 80);
 
         ctx.font = '32px Segoe UI, Arial';
         ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", size / 2, footerY + 140);
 
-        // Tarih (Şeridin üzerine)
         ctx.fillStyle = '#999999';
         ctx.font = '24px Segoe UI, Arial';
         const today = new Date().toLocaleDateString('tr-TR');
@@ -234,37 +226,41 @@ document.addEventListener('DOMContentLoaded', function() {
         return canvas;
     }
 
-    // --- İndir Butonu ---
-    downloadBtn.addEventListener('click', () => {
-        const canvas = createCanvasImage();
-        if(!canvas) return;
-        const link = document.createElement('a');
-        link.download = `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.9);
-        link.click();
-    });
+    // --- İNDİR BUTONU ---
+    if(downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const canvas = createCanvasImage();
+            if(!canvas) return;
+            const link = document.createElement('a');
+            link.download = `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.click();
+        });
+    }
 
-    // --- Paylaş Butonu ---
-    shareBtn.addEventListener('click', async () => {
-        const canvas = createCanvasImage();
-        if(!canvas) return;
-        canvas.toBlob(async (blob) => {
-            const file = new File([blob], `Teklif.jpg`, { type: 'image/jpeg' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Fiyat Teklifi',
-                        text: `${lastCalculation.productName} Fiyat Teklifi`
-                    });
-                } catch (error) { console.log('Hata', error); }
-            } else {
-                alert("Tarayıcı desteklemiyor. 'İndir' butonunu kullanın.");
-            }
-        }, 'image/jpeg', 0.9);
-    });
+    // --- PAYLAŞ BUTONU ---
+    if(shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const canvas = createCanvasImage();
+            if(!canvas) return;
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], `Teklif.jpg`, { type: 'image/jpeg' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Fiyat Teklifi',
+                            text: `${lastCalculation.productName} Fiyat Teklifi`
+                        });
+                    } catch (error) { console.log('Hata', error); }
+                } else {
+                    alert("Tarayıcı desteklemiyor. 'İndir' butonunu kullanın.");
+                }
+            }, 'image/jpeg', 0.9);
+        });
+    }
 
-    // --- Silme ---
+    // Silme
     deleteProductBtn.addEventListener('click', () => {
         const nameToDelete = deleteSelect.value;
         if (!nameToDelete) return;
