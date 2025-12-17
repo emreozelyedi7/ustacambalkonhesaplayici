@@ -8,17 +8,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentRateInput = document.getElementById('currentRate');
     const productSelect = document.getElementById('productSelect');
     
-    // YENİ GİRİŞLER
+    // GİRİŞLER
     const w1Input = document.getElementById('w1');
     const w2Input = document.getElementById('w2');
     const w3Input = document.getElementById('w3');
     const heightInput = document.getElementById('height');
     
     const calculateBtn = document.getElementById('calculateBtn');
-    const downloadBtn = document.getElementById('downloadBtn'); // Yeni Buton
+    const downloadBtn = document.getElementById('downloadBtn'); 
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
-    const mainLogo = document.getElementById('mainLogo'); // Logo Görseli
+    const mainLogo = document.getElementById('mainLogo'); 
 
     const newProductName = document.getElementById('newProductName');
     const newProductPrice = document.getElementById('newProductPrice');
@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteSelect = document.getElementById('deleteSelect');
     const deleteProductBtn = document.getElementById('deleteProductBtn');
 
-    // Son Hesaplama Verilerini Tutacak Obje
     let lastCalculation = null;
 
     loadProducts();
@@ -76,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         for (let [name, price] of Object.entries(products)) {
             let option1 = document.createElement('option');
-            // Ürün adını value içinde de tutalım ki görselde kullanabilelim
             option1.value = JSON.stringify({ price: price, name: name }); 
             option1.textContent = `${name} ($${price})`; 
             productSelect.appendChild(option1);
@@ -88,44 +86,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- YENİ HESAPLAMA MANTIĞI ---
+    // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
-        
-        // Dropdown value artık JSON formatında, onu parse edelim
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
         
-        // 3 En Değerini Al ve Topla (Boşsa 0 kabul et)
         const w1 = parseFloat(w1Input.value) || 0;
         const w2 = parseFloat(w2Input.value) || 0;
         const w3 = parseFloat(w3Input.value) || 0;
         const totalWidth = w1 + w2 + w3;
-        
         const h = parseFloat(heightInput.value);
 
         if (isNaN(rate) || rate <= 0) { alert("Dolar Kuru girin."); return; }
         if (!selectedData || totalWidth <= 0 || isNaN(h)) {
-            alert("Ürün seçin ve en az bir en/boy ölçüsü girin.");
+            alert("Ürün seçin ve ölçüleri girin.");
             return;
         }
 
         localStorage.setItem('dollarRate', rate);
 
-        const area = (totalWidth * h) / 10000; // m²
+        const area = (totalWidth * h) / 10000; 
         const totalUSD = area * selectedData.price;
         const totalTL = totalUSD * rate;
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
         const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-        // Ekrana Yaz
         resultArea.querySelector('.result-big').textContent = fmtTL.format(totalTL);
         detailInfo.innerHTML = `Toplam En: ${totalWidth} cm | Yükseklik: ${h} cm <br> Alan: ${area.toFixed(2)} m² <br> (${fmtUSD.format(totalUSD)})`;
 
-        // Görsel İndirme Butonunu Göster
         downloadBtn.style.display = 'block';
 
-        // Görsel oluşturmak için verileri sakla
         lastCalculation = {
             productName: selectedData.name,
             area: area.toFixed(2),
@@ -134,72 +125,90 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // --- GÖRSEL OLUŞTURMA VE İNDİRME ---
+    // --- GÖRSEL OLUŞTURMA (GÜNCELLENDİ) ---
     downloadBtn.addEventListener('click', () => {
         if (!lastCalculation) return;
 
-        // 1. Sanal bir tuval (canvas) oluştur
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const size = 1080; // Kare görsel boyutu (Instagram uyumlu)
+        const size = 1080; 
         canvas.width = size;
         canvas.height = size;
 
-        // 2. Arka planı beyaz yap
+        // Arka Plan
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, size, size);
 
-        // 3. Logoyu Çiz (Ortala)
-        const logoWidth = 600; // Logonun tuvaldeki genişliği
+        // Logo
+        const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (size - logoWidth) / 2;
-        const logoY = 100; // Üstten boşluk
-        ctx.drawImage(mainLogo, logoX, logoY, logoWidth, logoHeight);
+        ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // 4. Yazı Ayarları
-        ctx.fillStyle = '#333333';
+        // Metin Ayarları
         ctx.textAlign = 'center';
 
-        // Ürün Başlığı
+        // 1. Ürün Başlığı (Biraz yukarı alındı)
+        ctx.fillStyle = '#333333';
         ctx.font = 'bold 70px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.productName.toUpperCase(), size / 2, 500);
+        ctx.fillText(lastCalculation.productName.toUpperCase(), size / 2, 420);
 
-        // Çizgi Çek
+        // Çizgi
         ctx.beginPath();
-        ctx.moveTo(200, 540);
-        ctx.lineTo(880, 540);
+        ctx.moveTo(200, 460);
+        ctx.lineTo(880, 460);
         ctx.strokeStyle = '#e0e0e0';
         ctx.lineWidth = 5;
         ctx.stroke();
 
-        // M² Bilgisi
+        // 2. Ölçü Bilgileri (Yukarı alındı)
         ctx.fillStyle = '#666666';
         ctx.font = '50px Segoe UI, Arial';
-        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²`, size / 2, 650);
+        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²`, size / 2, 550);
         
-        // Ölçü Detayı (İnce)
         ctx.font = 'italic 30px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.details, size / 2, 700);
+        ctx.fillText(lastCalculation.details, size / 2, 600);
 
-        // FİYAT (En altta, Büyük ve Yeşil)
-        ctx.fillStyle = '#28a745'; // Yeşil renk
-        ctx.font = 'bold 110px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.totalPrice, size / 2, 900);
+        // 3. FİYAT (Büyük Yeşil)
+        ctx.fillStyle = '#28a745'; 
+        ctx.font = 'bold 130px Segoe UI, Arial';
+        ctx.fillText(lastCalculation.totalPrice, size / 2, 780);
 
-        // Tarih (En alt köşe, küçük)
-        ctx.fillStyle = '#aaaaaa';
-        ctx.font = '30px Segoe UI, Arial';
+        // --- YENİ EKLENEN ALT BİLGİ KUTUSU --- //
+        
+        // Turuncu Şerit (Dikdörtgen)
+        const footerHeight = 200;
+        const footerY = size - footerHeight; // En alttan başlar
+
+        // Turuncu Renk (#F37021 genel turuncu, logona uyumlu ton)
+        ctx.fillStyle = '#F37021'; 
+        ctx.fillRect(0, footerY, size, footerHeight);
+
+        // İçindeki Beyaz Yazılar
+        ctx.fillStyle = '#ffffff';
+        
+        // Yazı 1: Garanti
+        ctx.font = 'bold 40px Segoe UI, Arial';
+        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", size / 2, footerY + 80);
+
+        // Yazı 2: Taksit
+        ctx.font = '32px Segoe UI, Arial';
+        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", size / 2, footerY + 140);
+
+        // Tarih (Şeridin hemen üstüne, gri renk ile)
+        ctx.fillStyle = '#999999';
+        ctx.font = '24px Segoe UI, Arial';
         const today = new Date().toLocaleDateString('tr-TR');
-        ctx.fillText(today, size / 2, 1020);
+        ctx.fillText(today, size / 2, footerY - 20);
 
-        // 5. İndirme İşlemi
+        // İndirme
         const link = document.createElement('a');
         link.download = `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.9); // %90 kalite JPG
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
         link.click();
     });
 
-    // Silme Fonksiyonu
+    // Silme
     deleteProductBtn.addEventListener('click', () => {
         const nameToDelete = deleteSelect.value;
         if (!nameToDelete) return;
