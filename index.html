@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Fiyat Teklifi Oluşturucu</title>
+  <title>Profesyonel Teklif Robotu</title>
   <style>
     body { 
         font-family: 'Segoe UI', sans-serif; 
@@ -27,6 +27,9 @@
     input, select { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; transition: border 0.3s;}
     input:focus, select:focus { border-color: #007bff; outline: none; }
     
+    /* Not bilgisi için stil */
+    .note { font-size: 11px; color: #888; margin-top: 3px; }
+
     .rate-box { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 20px; }
     .rate-box label { color: #0d47a1; margin-top: 0; }
     .rate-box input { border-color: #90caf9; font-weight: bold; color: #0d47a1; font-size: 18px; }
@@ -36,17 +39,8 @@
     button.secondary { background-color: #007bff; margin-top: 10px; }
     button.danger { background-color: #dc3545; margin-top: 5px; }
     
-    /* İNDİRME ve PAYLAŞMA BUTONLARI */
-    #downloadBtn { 
-      background-color: #ff9800; 
-      display: none; 
-      margin-top: 15px;
-    }
-    #shareBtn {
-      background-color: #007bff;
-      display: none; /* Gizli başlar, hesaplayınca açılır */
-      margin-top: 10px;
-    }
+    #downloadBtn { background-color: #ff9800; display: none; margin-top: 15px; }
+    #shareBtn { background-color: #007bff; display: none; margin-top: 10px; }
 
     .result { margin-top: 20px; padding: 20px; background-color: #343a40; border-radius: 8px; text-align: center; color: #fff; }
     .result-big { font-size: 28px; font-weight: bold; color: #28a745; display: block; margin-top: 5px;}
@@ -101,13 +95,17 @@
       <span style="font-size: 12px; opacity: 0.7; display:block; margin-top:5px;" id="detailInfo"></span>
     </div>
 
-    <button id="downloadBtn">📸 Görseli Galeriye İndir</button>
-    <button id="shareBtn">📤 Görseli Müşteriyle Paylaş</button>
+    <button id="downloadBtn">📸 A4 Teklifi İndir</button>
+    <button id="shareBtn">📤 Teklifi Paylaş</button>
   </div>
 
   <div id="settings-section" class="container hidden">
-    <label>Yeni Ürün Adı:</label>
-    <input type="text" id="newProductName" placeholder="Örn: Cam Balkon">
+    <label>Ürün Adı (Uzun):</label>
+    <input type="text" id="newProductName" placeholder="Örn: Antrasit Gri Giyotin Cam">
+    
+    <label>Resim Dosya Adı (Kısa):</label>
+    <input type="text" id="newProductImage" placeholder="Örn: giyotin">
+    <div class="note">* Klasöre 'giyotin.jpg' olarak yüklediyseniz sadece 'giyotin' yazın. Türkçe karakter kullanmayın (örn: 'kose' yazın).</div>
     
     <label>m² Birim Fiyatı ($):</label>
     <input type="number" id="newProductPrice" placeholder="Örn: 100">
@@ -120,6 +118,6 @@
   </div>
 </div>
 
-<script src="script.js?v=3"></script>
+<script src="script.js?v=4"></script>
 </body>
 </html>
