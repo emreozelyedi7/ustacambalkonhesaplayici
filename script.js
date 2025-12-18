@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsSection = document.getElementById('settings-section');
     
     const currentRateInput = document.getElementById('currentRate');
-    const customerNameInput = document.getElementById('customerName'); // YENİ
+    const customerNameInput = document.getElementById('customerName'); 
+    const salesChannelInput = document.getElementById('salesChannel'); // YENİ
     const productSelect = document.getElementById('productSelect');
     
     const widthContainer = document.getElementById('width-container');
@@ -49,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const shareBtn = document.getElementById('shareBtn');
     const shareVideoBtn = document.getElementById('shareVideoBtn');
     
-    // RAPOR BUTONLARI
     const downloadReportBtn = document.getElementById('downloadReportBtn');
     const clearReportBtn = document.getElementById('clearReportBtn');
 
@@ -87,7 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if(confirm("Ölçüler temizlensin mi?")) {
             widthContainer.innerHTML = '<input type="number" class="width-input" placeholder="En 1">';
             heightInput.value = '';
-            customerNameInput.value = ''; // İsim de silinsin
+            customerNameInput.value = ''; 
+            salesChannelInput.value = 'WhatsApp'; // Varsayılana dön
             resultArea.querySelector('.result-big').textContent = '0.00 ₺';
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
@@ -135,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.resetDefaultProducts = function() {
-        if(confirm("Tüm listeniz silinecek ve varsayılan ürünler (Linkli) yüklenecek. Onaylıyor musunuz?")) {
+        if(confirm("Tüm listeniz silinecek ve varsayılan ürünler yüklenecek. Onaylıyor musunuz?")) {
             localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
             loadProducts();
             alert("Varsayılan ürünler yüklendi!");
@@ -175,12 +176,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- RAPORLAMA FONKSİYONLARI ---
-    function addToReport(customer, product, area, price) {
+    // --- RAPORLAMA FONKSİYONLARI (KANAL EKLENDİ) ---
+    function addToReport(customer, channel, product, area, price) {
         let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
         const newReport = {
             date: new Date().toLocaleString('tr-TR'),
             customer: customer || "İsimsiz Müşteri",
+            channel: channel,
             product: product,
             area: area,
             price: price
@@ -196,16 +198,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // CSV Başlıkları
-        let csvContent = "Tarih,Musteri Adi,Urun,m2,Fiyat\n";
+        // CSV Başlıkları (Kanal Eklendi)
+        let csvContent = "Tarih,Musteri Adi,Kanal,Urun,m2,Fiyat\n";
 
         reports.forEach(row => {
-            // CSV'de virgül karışıklığı olmasın diye verileri tırnak içine alıyoruz
-            let rowString = `"${row.date}","${row.customer}","${row.product}","${row.area}","${row.price}"`;
+            let rowString = `"${row.date}","${row.customer}","${row.channel}","${row.product}","${row.area}","${row.price}"`;
             csvContent += rowString + "\n";
         });
 
-        // Türkçe Karakter Sorunu İçin BOM ekliyoruz (\uFEFF)
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
@@ -225,12 +225,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-
     // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
-        const custName = customerNameInput.value.trim(); // Müşteri Adı
+        const custName = customerNameInput.value.trim(); 
+        const channel = salesChannelInput.value; // Seçilen Kanal
         
         const allWidthInputs = document.querySelectorAll('.width-input');
         let totalWidth = 0;
@@ -279,8 +279,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if(shareBtn) shareBtn.style.display = 'block';
         if(shareVideoBtn) shareVideoBtn.style.display = 'block'; 
 
-        // --- RAPORA EKLE ---
-        addToReport(custName, selectedData.name, formattedArea, formattedPrice);
+        // --- RAPORA EKLE (KANAL İLE) ---
+        addToReport(custName, channel, selectedData.name, formattedArea, formattedPrice);
 
         lastCalculation = {
             productName: selectedData.name,
