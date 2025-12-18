@@ -1,10 +1,30 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (LİNKLER EKLENDİ) ---
 const defaultProductsData = {
-    "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { price: 140, img: "1" },
-    "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { price: 165, img: "2" },
-    "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { price: 200, img: "4" },
-    "Isıcamlı Temizlenebilir Giyotin": { price: 240, img: "3" },
-    "Isıcamlı Sürme Sistem Cam Balkon": { price: 165, img: "5" }
+    "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
+        price: 140, 
+        img: "1", 
+        video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" 
+    },
+    "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
+        price: 165, 
+        img: "2",
+        video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
+    },
+    "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
+        price: 200, 
+        img: "4",
+        video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
+    },
+    "Isıcamlı Temizlenebilir Giyotin": { 
+        price: 240, 
+        img: "3",
+        video: "https://www.instagram.com/reel/DSFKfGxCAWg/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
+    },
+    "Isıcamlı Sürme Sistem Cam Balkon": { 
+        price: 165, 
+        img: "5",
+        video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
+    }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,8 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const calculateBtn = document.getElementById('calculateBtn');
     const downloadBtn = document.getElementById('downloadBtn'); 
     const shareBtn = document.getElementById('shareBtn');
-    // YENİ BUTON
-    const shareVideoBtn = document.getElementById('shareVideoBtn');
+    const shareVideoBtn = document.getElementById('shareVideoBtn'); // Video Link Butonu
     
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
@@ -35,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const newProductName = document.getElementById('newProductName');
     const newProductImage = document.getElementById('newProductImage'); 
+    const newProductVideo = document.getElementById('newProductVideo'); // Yeni Input
     const newProductPrice = document.getElementById('newProductPrice');
     const saveProductBtn = document.getElementById('saveProductBtn');
     const deleteSelect = document.getElementById('deleteSelect');
@@ -66,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
             shareBtn.style.display = 'none';
-            shareVideoBtn.style.display = 'none'; // Videoyu da gizle
+            shareVideoBtn.style.display = 'none'; 
             lastCalculation = null;
         }
     });
@@ -102,15 +122,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function checkAndLoadDefaults() {
-        if (!localStorage.getItem('myProductsV3')) {
-            localStorage.setItem('myProductsV3', JSON.stringify(defaultProductsData));
+        if (!localStorage.getItem('myProductsV4')) { // V4'e geçtik (Linkler eklendiği için)
+            localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
         }
         loadProducts();
     }
 
     window.resetDefaultProducts = function() {
-        if(confirm("Tüm listeniz silinecek ve varsayılan ürünler yüklenecek. Onaylıyor musunuz?")) {
-            localStorage.setItem('myProductsV3', JSON.stringify(defaultProductsData));
+        if(confirm("Tüm listeniz silinecek ve varsayılan ürünler (Linkli) yüklenecek. Onaylıyor musunuz?")) {
+            localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
             loadProducts();
             alert("Varsayılan ürünler yüklendi!");
         }
@@ -119,18 +139,25 @@ document.addEventListener('DOMContentLoaded', function() {
     saveProductBtn.addEventListener('click', () => {
         const name = newProductName.value.trim();
         const imgName = newProductImage.value.trim(); 
+        const videoLink = newProductVideo.value.trim(); // Linki al
         const price = parseFloat(newProductPrice.value);
+
         if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
-        let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
-        products[name] = { price: price, img: imgName };
-        localStorage.setItem('myProductsV3', JSON.stringify(products));
+
+        let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
+        
+        // Veriyi kaydet (Link dahil)
+        products[name] = { price: price, img: imgName, video: videoLink };
+        
+        localStorage.setItem('myProductsV4', JSON.stringify(products));
+
         alert(`${name} kaydedildi!`);
-        newProductName.value = ''; newProductImage.value = ''; newProductPrice.value = '';
+        newProductName.value = ''; newProductImage.value = ''; newProductVideo.value = ''; newProductPrice.value = '';
         loadProducts();
     });
 
     function loadProducts() {
-        let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
+        let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
         productSelect.innerHTML = '<option value="">Seçiniz...</option>';
         deleteSelect.innerHTML = '<option value="">Seçiniz...</option>';
         for (let [name, data] of Object.entries(products)) {
@@ -192,65 +219,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
-        if(shareVideoBtn) shareVideoBtn.style.display = 'block'; // Video butonunu aç
+        if(shareVideoBtn) shareVideoBtn.style.display = 'block'; 
 
         lastCalculation = {
             productName: selectedData.name,
             productImg: selectedData.img, 
+            productVideo: selectedData.video || "", // Link yoksa boş bırak
             area: realArea.toFixed(2),
             totalPrice: fmtTL.format(roundedTotalTL), 
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
 
-    // --- VİDEO PAYLAŞMA BUTONU MANTIĞI ---
+    // --- LİNK PAYLAŞMA BUTONU ---
     if(shareVideoBtn) {
         shareVideoBtn.addEventListener('click', async () => {
-            if (!lastCalculation || !lastCalculation.productImg) {
-                alert("Ürün bilgisi bulunamadı.");
+            if (!lastCalculation || !lastCalculation.productVideo) {
+                alert("Bu ürün için video linki tanımlanmamış.");
                 return;
             }
 
-            const videoFileName = lastCalculation.productImg + ".mp4"; // Örn: 1.mp4
-            
-            // Kullanıcıya bilgi ver
-            const originalText = shareVideoBtn.textContent;
-            shareVideoBtn.textContent = "Video Hazırlanıyor... (Lütfen bekleyin)";
-            shareVideoBtn.disabled = true;
+            const videoUrl = lastCalculation.productVideo;
+            const shareData = {
+                title: lastCalculation.productName,
+                text: `${lastCalculation.productName} Tanıtım Videosunu buradan izleyebilirsiniz:\n${videoUrl}`
+                // url: videoUrl // Bazı tarayıcılar url'i ayrı, bazıları text içinde sever. Text en garantisidir.
+            };
 
-            try {
-                // Videoyu sunucudan çek (Blob olarak)
-                const response = await fetch(videoFileName);
-                if (!response.ok) {
-                    throw new Error("Video dosyası bulunamadı. Klasörde '" + videoFileName + "' olduğundan emin olun.");
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log("Paylaşım iptal edildi.");
                 }
-                const blob = await response.blob();
-                
-                // Dosya oluştur
-                const file = new File([blob], videoFileName, { type: 'video/mp4' });
-
-                // Paylaş
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: lastCalculation.productName,
-                        text: `${lastCalculation.productName} Tanıtım Videosu`
-                    });
-                } else {
-                    alert("Tarayıcınız video paylaşımını desteklemiyor.");
-                }
-            } catch (error) {
-                alert("Hata: " + error.message);
-            } finally {
-                // Butonu eski haline getir
-                shareVideoBtn.textContent = originalText;
-                shareVideoBtn.disabled = false;
+            } else {
+                // Bilgisayarda ise linki kopyala
+                navigator.clipboard.writeText(`${lastCalculation.productName} Video: ${videoUrl}`);
+                alert("Video linki kopyalandı! Müşteriye yapıştırabilirsiniz.");
             }
         });
     }
 
 
-    // --- A4 GÖRSEL OLUŞTURUCU ---
+    // --- A4 GÖRSEL OLUŞTURUCU (DEĞİŞMEDİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -264,7 +275,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // Tarih
         ctx.textAlign = 'right'; 
         ctx.fillStyle = '#888888';
         ctx.font = '24px Segoe UI, Arial';
@@ -273,13 +283,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         ctx.textAlign = 'center'; 
 
-        // 1. LOGO
         const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // 2. ÜRÜN ADI
         let textY = 320; 
         ctx.fillStyle = '#333333';
         const fontSize = 40; 
@@ -304,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
-        // 3. RESİM KUTUSU
         const boxY = 450;
         const boxWidth = 900;
         const boxHeight = 600; 
@@ -335,7 +342,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        // 4. DETAYLAR
         let detailsY = 1100;
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
@@ -358,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = 'bold 120px Segoe UI, Arial';
         ctx.fillText(lastCalculation.totalPrice, width / 2, detailsY);
 
-        // 5. FOOTER
         const footerHeight = 200;
         const footerY = height - footerHeight;
         ctx.fillStyle = '#F37021'; 
@@ -410,9 +415,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const nameToDelete = deleteSelect.value;
         if (!nameToDelete) return;
         if(confirm(`${nameToDelete} silinsin mi?`)) {
-            let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
+            let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
             delete products[nameToDelete];
-            localStorage.setItem('myProductsV3', JSON.stringify(products));
+            localStorage.setItem('myProductsV4', JSON.stringify(products));
             loadProducts();
         }
     });

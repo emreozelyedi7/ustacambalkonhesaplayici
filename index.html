@@ -46,13 +46,14 @@
     #downloadBtn { background-color: #ff9800; display: none; margin-top: 15px; }
     #shareBtn { background-color: #007bff; display: none; margin-top: 10px; }
     
-    /* YENİ: Video Butonu */
+    /* Video Link Butonu (Instagram Rengi) */
     #shareVideoBtn { 
-        background-color: #6610f2; /* Mor Renk */
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        color: white;
         display: none; 
         margin-top: 10px; 
     }
-    #shareVideoBtn:hover { background-color: #520dc2; }
+    #shareVideoBtn:hover { opacity: 0.9; }
 
     .result { margin-top: 20px; padding: 20px; background-color: #343a40; border-radius: 8px; text-align: center; color: #fff; }
     .result-big { font-size: 28px; font-weight: bold; color: #28a745; display: block; margin-top: 5px;}
@@ -117,7 +118,7 @@
 
     <button id="downloadBtn">📸 A4 Teklifi İndir</button>
     <button id="shareBtn">📤 Teklifi Paylaş</button>
-    <button id="shareVideoBtn">🎥 Tanıtım Videosunu Paylaş</button>
+    <button id="shareVideoBtn">🎥 Tanıtım Videosu Linkini Gönder</button>
   </div>
 
   <div id="settings-section" class="container hidden">
@@ -126,7 +127,10 @@
     
     <label>Resim Dosya Adı (Kısa):</label>
     <input type="text" id="newProductImage" placeholder="Örn: 6">
-    <div class="note">* Resim '1.jpg' ise buraya '1' yazın. Video da otomatik '1.mp4' olacak.</div>
+    <div class="note">* Klasördeki resim adı (örn: 1).</div>
+
+    <label>Video Linki (Instagram):</label>
+    <input type="text" id="newProductVideo" placeholder="https://instagram.com/reel/...">
     
     <label>m² Birim Fiyatı ($):</label>
     <input type="number" id="newProductPrice" placeholder="Örn: 100">
@@ -142,6 +146,6 @@
   </div>
 </div>
 
-<script src="script.js?v=10"></script>
+<script src="script.js?v=11"></script>
 </body>
 </html>
