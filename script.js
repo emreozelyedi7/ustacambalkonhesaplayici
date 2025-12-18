@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentRateInput = document.getElementById('currentRate');
     const productSelect = document.getElementById('productSelect');
     
-    // YENİ: Dinamik En Elemanları
     const widthContainer = document.getElementById('width-container');
     const addWidthBtn = document.getElementById('addWidthBtn');
+    const resetInputsBtn = document.getElementById('resetInputsBtn'); // Yeni Buton
     
     const heightInput = document.getElementById('height');
     
@@ -44,20 +44,38 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAndLoadDefaults();
     loadRate();
 
-    // --- EN EKLEME BUTONU İŞLEVİ ---
+    // --- EN EKLEME BUTONU ---
     addWidthBtn.addEventListener('click', () => {
-        // Mevcut kutu sayısını bul
         const currentCount = widthContainer.querySelectorAll('.width-input').length;
         const nextCount = currentCount + 1;
         
-        // Yeni input oluştur
         const newInput = document.createElement('input');
         newInput.type = 'number';
         newInput.className = 'width-input';
-        newInput.placeholder = `En ${nextCount}`; // "En 2", "En 3" yazar
+        newInput.placeholder = `En ${nextCount}`; 
         
-        // Konteyner'a ekle
         widthContainer.appendChild(newInput);
+    });
+
+    // --- SIFIRLAMA (TEMİZLEME) BUTONU ---
+    resetInputsBtn.addEventListener('click', () => {
+        if(confirm("Ölçüler temizlensin mi?")) {
+            // 1. En kutularını sıfırla (Sadece 1 tane kalsın)
+            widthContainer.innerHTML = '<input type="number" class="width-input" placeholder="En 1">';
+            
+            // 2. Yükseklik temizle
+            heightInput.value = '';
+            
+            // 3. Sonuç ekranını temizle
+            resultArea.querySelector('.result-big').textContent = '0.00 ₺';
+            detailInfo.innerHTML = '';
+            
+            // 4. Butonları gizle
+            downloadBtn.style.display = 'none';
+            shareBtn.style.display = 'none';
+            
+            lastCalculation = null;
+        }
     });
 
     // --- MENÜ GEÇİŞLERİ ---
@@ -86,13 +104,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let thousands = Math.floor(integerPart / 1000) * 1000;
         let remainder = integerPart % 1000;
 
-        if (remainder === 0) {
-            return integerPart; 
-        } else if (remainder <= 500) {
-            return thousands + 500; 
-        } else {
-            return thousands + 1000; 
-        }
+        if (remainder === 0) { return integerPart; } 
+        else if (remainder <= 500) { return thousands + 500; } 
+        else { return thousands + 1000; }
     }
 
     function checkAndLoadDefaults() {
@@ -115,10 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const imgName = newProductImage.value.trim(); 
         const price = parseFloat(newProductPrice.value);
 
-        if (!name || !imgName || isNaN(price)) { 
-            alert("Eksik bilgi girdiniz."); 
-            return; 
-        }
+        if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
 
         let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
         products[name] = { price: price, img: imgName };
@@ -147,22 +158,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- HESAPLAMA (DİNAMİK TOPLAMA) ---
+    // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
         
-        // -- DEĞİŞİKLİK BURADA --
-        // Sayfadaki tüm '.width-input' sınıfına sahip kutuları bul
         const allWidthInputs = document.querySelectorAll('.width-input');
         let totalWidth = 0;
         
-        // Hepsini tek tek topla
         allWidthInputs.forEach(input => {
             const val = parseFloat(input.value);
-            if (!isNaN(val)) {
-                totalWidth += val;
-            }
+            if (!isNaN(val)) totalWidth += val;
         });
 
         const h = parseFloat(heightInput.value);
