@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- HESAPLAMA (ÖZEL KURALLAR EKLENDİ) ---
+    // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
@@ -174,43 +174,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
         localStorage.setItem('dollarRate', rate);
 
-        // 1. GERÇEK ALAN (Müşteriye gösterilecek olan)
-        // cm cinsinden hesaplandığı için 10000'e bölüp m2 buluyoruz
+        // 1. GERÇEK ALAN
         let realArea = (totalWidth * h) / 10000; 
 
-        // 2. FİYATLANDIRMA İÇİN GİZLİ HESAP
+        // 2. GİZLİ HESAP
         let pricingHeight = h;
         let pricingArea = realArea;
-
         const productName = selectedData.name.toLowerCase();
 
-        // KURAL: CAM BALKON İSE
         if (productName.includes("cam balkon")) {
-            // Min Yükseklik Kuralı: 1.8m (180cm)
             if (h < 180) {
                 pricingHeight = 180;
-                // Yükseklik değiştiği için alanı o anlık tekrar hesapla
                 pricingArea = (totalWidth * pricingHeight) / 10000;
             }
-            
-            // Min m2 Kuralı: 5m2
             if (pricingArea < 5) {
                 pricingArea = 5;
             }
         }
-        
-        // KURAL: GİYOTİN İSE
         else if (productName.includes("giyotin")) {
-            // Min m2 Kuralı: 7m2
             if (pricingArea < 7) {
                 pricingArea = 7;
             }
         }
 
-        // Fiyatı "pricingArea" (gizli m2) üzerinden hesapla
         const rawTotalTL = (pricingArea * selectedData.price) * rate; 
-        
-        // Akıllı yuvarlama uygula
         const roundedTotalTL = smartRound(rawTotalTL);
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -218,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         resultArea.querySelector('.result-big').textContent = fmtTL.format(roundedTotalTL);
         
-        // Ekranda da bilgi verelim (Burada gerçek alanı gösteriyoruz ama fiyat farklı çıkabilir)
         detailInfo.innerHTML = `Hesaplanan Alan: ${realArea.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
@@ -227,13 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
         lastCalculation = {
             productName: selectedData.name,
             productImg: selectedData.img, 
-            area: realArea.toFixed(2), // Görselde GERÇEK ALAN yazacak
-            totalPrice: fmtTL.format(roundedTotalTL), // Görselde YUVARLANMIŞ/MİNİMUM FİYAT yazacak
+            area: realArea.toFixed(2),
+            totalPrice: fmtTL.format(roundedTotalTL), 
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
 
-    // --- A4 GÖRSEL OLUŞTURUCU ---
+    // --- A4 GÖRSEL OLUŞTURUCU (SABİT KUTU MANTIĞI EKLENDİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -247,11 +233,13 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
+        // 1. LOGO
         const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
+        // 2. ÜRÜN ADI
         let cursorY = 60 + logoHeight + 60; 
         
         ctx.fillStyle = '#333333';
@@ -278,6 +266,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, cursorY);
 
+        // --- 3. SABİT RESİM KUTUSU (BURASI DEĞİŞTİ) ---
+        // Yazı nerede biterse bitsin, resim kutusu oradan biraz aşağıda başlar.
+        // Ama kutunun YÜKSEKLİĞİ ve GENİŞLİĞİ sabittir.
+        
+        cursorY += 40; // Yazıdan sonraki boşluk
+        
+        // Sabit Kutu Ölçüleri
+        const boxWidth = 900;
+        const boxHeight = 650; // Resim için ayrılan sabit dikey alan
+        const boxX = (width - boxWidth) / 2;
+        const boxY = cursorY; // Kutunun başladığı Y koordinatı
+
+        // Resmi Yükle
         const imgName = lastCalculation.productImg;
         const productImgObj = new Image();
         productImgObj.src = imgName + ".jpg"; 
@@ -288,26 +289,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (productImgObj.complete && productImgObj.naturalWidth !== 0) {
-            cursorY += 40; 
-            const boxWidth = 900;
-            const boxHeight = 600;
-            const boxX = (width - boxWidth) / 2;
+            // Resmi kutunun içine "FIT" (Sığdır) mantığıyla yerleştir
+            // En boy oranını koru, kutudan taşma, kutuyu ortala.
             
             const hRatio = boxWidth / productImgObj.naturalWidth;
             const vRatio = boxHeight / productImgObj.naturalHeight;
-            const ratio = Math.min(hRatio, vRatio);
+            const ratio = Math.min(hRatio, vRatio); // Sığdırmak için küçüğü al
             
-            const centerShift_x = (boxWidth - productImgObj.naturalWidth * ratio) / 2;
-            const centerShift_y = (boxHeight - productImgObj.naturalHeight * ratio) / 2; 
+            const newImgWidth = productImgObj.naturalWidth * ratio;
+            const newImgHeight = productImgObj.naturalHeight * ratio;
+
+            // Ortalamak için kaydırma miktarları
+            const centerShift_x = (boxWidth - newImgWidth) / 2;
+            const centerShift_y = (boxHeight - newImgHeight) / 2;
             
-            ctx.drawImage(productImgObj, 0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
-                boxX + centerShift_x, cursorY + centerShift_y, productImgObj.naturalWidth * ratio, productImgObj.naturalHeight * ratio);
-            
-            cursorY += boxHeight + 40; 
-        } else {
-            cursorY += 600; 
+            // Resmi Çiz (Kutunun X'i + Kaydırma, Kutunun Y'si + Kaydırma)
+            ctx.drawImage(productImgObj, 
+                0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
+                boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
+        // --- 4. ALT METİNLERİN BAŞLANGIÇ YERİ ---
+        // ÖNEMLİ: İmleci resmin yüksekliğine göre değil, KUTUNUN yüksekliğine göre aşağı atıyoruz.
+        // Böylece resim küçük de olsa büyük de olsa alt metin hep aynı yerden başlar.
+        
+        cursorY = boxY + boxHeight + 40; 
+
+        // Çizgi
         ctx.beginPath();
         ctx.moveTo(200, cursorY);
         ctx.lineTo(880, cursorY);
@@ -329,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = 'bold 120px Segoe UI, Arial';
         ctx.fillText(lastCalculation.totalPrice, width / 2, cursorY);
 
+        // 5. FOOTER (En alt)
         const footerHeight = 200;
         const footerY = height - footerHeight;
         
