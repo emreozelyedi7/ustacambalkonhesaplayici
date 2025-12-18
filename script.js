@@ -17,9 +17,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentRateInput = document.getElementById('currentRate');
     const productSelect = document.getElementById('productSelect');
     
-    const w1Input = document.getElementById('w1');
-    const w2Input = document.getElementById('w2');
-    const w3Input = document.getElementById('w3');
+    // YENİ: Dinamik En Elemanları
+    const widthContainer = document.getElementById('width-container');
+    const addWidthBtn = document.getElementById('addWidthBtn');
+    
     const heightInput = document.getElementById('height');
     
     const calculateBtn = document.getElementById('calculateBtn');
@@ -40,9 +41,24 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastCalculation = null;
 
     // --- BAŞLATMA ---
-    // Eğer hafıza boşsa veya eski versiyonsa varsayılanları yükle
     checkAndLoadDefaults();
     loadRate();
+
+    // --- EN EKLEME BUTONU İŞLEVİ ---
+    addWidthBtn.addEventListener('click', () => {
+        // Mevcut kutu sayısını bul
+        const currentCount = widthContainer.querySelectorAll('.width-input').length;
+        const nextCount = currentCount + 1;
+        
+        // Yeni input oluştur
+        const newInput = document.createElement('input');
+        newInput.type = 'number';
+        newInput.className = 'width-input';
+        newInput.placeholder = `En ${nextCount}`; // "En 2", "En 3" yazar
+        
+        // Konteyner'a ekle
+        widthContainer.appendChild(newInput);
+    });
 
     // --- MENÜ GEÇİŞLERİ ---
     navCalc.addEventListener('click', () => {
@@ -65,34 +81,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
-    // --- ÖZEL YUVARLAMA FONKSİYONU ---
     function smartRound(amount) {
-        // Önce tam sayıya çevir (kuruşları at)
         let integerPart = Math.floor(amount);
-        
-        // Binlik kısmı ve kalanı bul
         let thousands = Math.floor(integerPart / 1000) * 1000;
         let remainder = integerPart % 1000;
 
         if (remainder === 0) {
-            return integerPart; // Tam 1000'in katıysa dokunma (Örn: 30.000)
+            return integerPart; 
         } else if (remainder <= 500) {
-            return thousands + 500; // 1-500 arasındaysa 500'e tamamla
+            return thousands + 500; 
         } else {
-            return thousands + 1000; // 501-999 arasındaysa üst binliğe tamamla
+            return thousands + 1000; 
         }
     }
 
-    // --- ÜRÜN YÖNETİMİ ---
     function checkAndLoadDefaults() {
-        // 'myProductsV3' anahtarını kullanıyoruz (Yeni liste için)
         if (!localStorage.getItem('myProductsV3')) {
             localStorage.setItem('myProductsV3', JSON.stringify(defaultProductsData));
         }
         loadProducts();
     }
 
-    // HTML'den çağrılabilmesi için global yapıyoruz
     window.resetDefaultProducts = function() {
         if(confirm("Tüm listeniz silinecek ve varsayılan ürünler yüklenecek. Onaylıyor musunuz?")) {
             localStorage.setItem('myProductsV3', JSON.stringify(defaultProductsData));
@@ -138,15 +147,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- HESAPLAMA ---
+    // --- HESAPLAMA (DİNAMİK TOPLAMA) ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
         
-        const w1 = parseFloat(w1Input.value) || 0;
-        const w2 = parseFloat(w2Input.value) || 0;
-        const w3 = parseFloat(w3Input.value) || 0;
-        const totalWidth = w1 + w2 + w3;
+        // -- DEĞİŞİKLİK BURADA --
+        // Sayfadaki tüm '.width-input' sınıfına sahip kutuları bul
+        const allWidthInputs = document.querySelectorAll('.width-input');
+        let totalWidth = 0;
+        
+        // Hepsini tek tek topla
+        allWidthInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val)) {
+                totalWidth += val;
+            }
+        });
+
         const h = parseFloat(heightInput.value);
 
         if (isNaN(rate) || rate <= 0) { alert("Dolar Kuru girin."); return; }
@@ -158,16 +176,15 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('dollarRate', rate);
 
         const area = (totalWidth * h) / 10000; 
-        const rawTotalTL = (area * selectedData.price) * rate; // Ham Tutar
+        const rawTotalTL = (area * selectedData.price) * rate; 
         
-        // --- AKILLI YUVARLAMA UYGULANIYOR ---
         const roundedTotalTL = smartRound(rawTotalTL);
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
         const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
         resultArea.querySelector('.result-big').textContent = fmtTL.format(roundedTotalTL);
-        detailInfo.innerHTML = `Alan: ${area.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
+        detailInfo.innerHTML = `Toplam En: ${totalWidth} cm | Yükseklik: ${h} cm <br> Alan: ${area.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
@@ -176,12 +193,12 @@ document.addEventListener('DOMContentLoaded', function() {
             productName: selectedData.name,
             productImg: selectedData.img, 
             area: area.toFixed(2),
-            totalPrice: fmtTL.format(roundedTotalTL), // Yuvarlanmış fiyatı görsele gönder
+            totalPrice: fmtTL.format(roundedTotalTL),
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
 
-    // --- A4 GÖRSEL OLUŞTURUCU (DEĞİŞMEDİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 

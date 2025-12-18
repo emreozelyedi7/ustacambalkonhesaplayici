@@ -49,8 +49,28 @@
     .nav a { text-decoration: none; color: #666; font-size: 14px; cursor: pointer; padding: 10px; }
     .nav a.active { color: #007bff; font-weight: bold; border-bottom: 3px solid #007bff; margin-bottom: -12px; }
 
-    .width-group { display: flex; gap: 5px; }
-    .width-group input { text-align: center; }
+    /* YENİ STİLLER: Dinamik Genişlik Kutuları */
+    #width-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    /* Eklenen her kutu yan yana dizilsin, sığmazsa aşağı geçsin */
+    .width-input {
+        flex: 1 1 30%; /* Her kutu satırın %30'unu kaplasın */
+        text-align: center;
+        min-width: 80px;
+    }
+    
+    /* En Ekle Butonu */
+    #addWidthBtn {
+        background-color: #17a2b8; /* Turkuaz renk */
+        margin-top: 5px;
+        padding: 8px;
+        font-size: 13px;
+    }
+    #addWidthBtn:hover { background-color: #138496; }
+
   </style>
 </head>
 <body>
@@ -77,11 +97,13 @@
     </select>
 
     <label>Balkon En Ölçüleri (cm):</label>
-    <div class="width-group">
-      <input type="number" id="w1" placeholder="En 1">
-      <input type="number" id="w2" placeholder="En 2">
-      <input type="number" id="w3" placeholder="En 3">
+    
+    <div id="width-container">
+        <input type="number" class="width-input" placeholder="En 1">
     </div>
+    
+    <button id="addWidthBtn" type="button">+ En Ekle</button>
+
 
     <label>Yükseklik (cm):</label>
     <input type="number" id="height" placeholder="Örn: 200">
@@ -120,6 +142,6 @@
   </div>
 </div>
 
-<script src="script.js?v=5"></script>
+<script src="script.js?v=6"></script>
 </body>
 </html>
