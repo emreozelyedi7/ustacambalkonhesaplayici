@@ -27,7 +27,6 @@
     input, select { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; transition: border 0.3s;}
     input:focus, select:focus { border-color: #007bff; outline: none; }
     
-    /* Not bilgisi için stil */
     .note { font-size: 11px; color: #888; margin-top: 3px; }
 
     .rate-box { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 20px; }
@@ -90,7 +89,7 @@
     <button id="calculateBtn">HESAPLA</button>
 
     <div class="result" id="resultArea">
-      <span>Tutar:</span>
+      <span>Yuvarlanmış Tutar:</span>
       <span class="result-big">0.00 ₺</span>
       <span style="font-size: 12px; opacity: 0.7; display:block; margin-top:5px;" id="detailInfo"></span>
     </div>
@@ -101,16 +100,19 @@
 
   <div id="settings-section" class="container hidden">
     <label>Ürün Adı (Uzun):</label>
-    <input type="text" id="newProductName" placeholder="Örn: Antrasit Gri Giyotin Cam">
+    <input type="text" id="newProductName" placeholder="Örn: Yeni Ürün">
     
     <label>Resim Dosya Adı (Kısa):</label>
-    <input type="text" id="newProductImage" placeholder="Örn: giyotin">
-    <div class="note">* Klasöre 'giyotin.jpg' olarak yüklediyseniz sadece 'giyotin' yazın. Türkçe karakter kullanmayın (örn: 'kose' yazın).</div>
+    <input type="text" id="newProductImage" placeholder="Örn: 6">
+    <div class="note">* Resim adı '1.jpg' ise buraya sadece '1' yazın.</div>
     
     <label>m² Birim Fiyatı ($):</label>
     <input type="number" id="newProductPrice" placeholder="Örn: 100">
 
     <button class="secondary" id="saveProductBtn">KAYDET</button>
+    
+    <button onclick="resetDefaultProducts()" style="background-color:#6c757d; margin-top:10px;">🔄 Varsayılan Ürünleri Yükle</button>
+    
     <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
     <label>Kayıtlı Ürünler:</label>
     <select id="deleteSelect"></select>
@@ -118,6 +120,6 @@
   </div>
 </div>
 
-<script src="script.js?v=4"></script>
+<script src="script.js?v=5"></script>
 </body>
 </html>

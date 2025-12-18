@@ -1,5 +1,14 @@
+// --- VARSAYILAN ÜRÜN LİSTESİ ---
+const defaultProductsData = {
+    "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { price: 140, img: "1" },
+    "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { price: 165, img: "2" },
+    "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { price: 200, img: "4" },
+    "Isıcamlı Temizlenebilir Giyotin": { price: 240, img: "3" },
+    "Isıcamlı Sürme Sistem Cam Balkon": { price: 165, img: "5" }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    // --- ELEMENTLER ---
+    // ELEMENTLER
     const navCalc = document.getElementById('nav-calc');
     const navSettings = document.getElementById('nav-settings');
     const calcSection = document.getElementById('calc-section');
@@ -21,9 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const detailInfo = document.getElementById('detailInfo');
     const mainLogo = document.getElementById('mainLogo'); 
 
-    // Yeni Ayar Alanları
     const newProductName = document.getElementById('newProductName');
-    const newProductImage = document.getElementById('newProductImage'); // Resim Adı Girişi
+    const newProductImage = document.getElementById('newProductImage'); 
     const newProductPrice = document.getElementById('newProductPrice');
     const saveProductBtn = document.getElementById('saveProductBtn');
     const deleteSelect = document.getElementById('deleteSelect');
@@ -31,7 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let lastCalculation = null;
 
-    loadProducts();
+    // --- BAŞLATMA ---
+    // Eğer hafıza boşsa veya eski versiyonsa varsayılanları yükle
+    checkAndLoadDefaults();
     loadRate();
 
     // --- MENÜ GEÇİŞLERİ ---
@@ -55,40 +65,68 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
-    // --- ÜRÜN KAYDETME (Güncellendi) ---
+    // --- ÖZEL YUVARLAMA FONKSİYONU ---
+    function smartRound(amount) {
+        // Önce tam sayıya çevir (kuruşları at)
+        let integerPart = Math.floor(amount);
+        
+        // Binlik kısmı ve kalanı bul
+        let thousands = Math.floor(integerPart / 1000) * 1000;
+        let remainder = integerPart % 1000;
+
+        if (remainder === 0) {
+            return integerPart; // Tam 1000'in katıysa dokunma (Örn: 30.000)
+        } else if (remainder <= 500) {
+            return thousands + 500; // 1-500 arasındaysa 500'e tamamla
+        } else {
+            return thousands + 1000; // 501-999 arasındaysa üst binliğe tamamla
+        }
+    }
+
+    // --- ÜRÜN YÖNETİMİ ---
+    function checkAndLoadDefaults() {
+        // 'myProductsV3' anahtarını kullanıyoruz (Yeni liste için)
+        if (!localStorage.getItem('myProductsV3')) {
+            localStorage.setItem('myProductsV3', JSON.stringify(defaultProductsData));
+        }
+        loadProducts();
+    }
+
+    // HTML'den çağrılabilmesi için global yapıyoruz
+    window.resetDefaultProducts = function() {
+        if(confirm("Tüm listeniz silinecek ve varsayılan ürünler yüklenecek. Onaylıyor musunuz?")) {
+            localStorage.setItem('myProductsV3', JSON.stringify(defaultProductsData));
+            loadProducts();
+            alert("Varsayılan ürünler yüklendi!");
+        }
+    };
+
     saveProductBtn.addEventListener('click', () => {
         const name = newProductName.value.trim();
-        const imgName = newProductImage.value.trim(); // Resim adı
+        const imgName = newProductImage.value.trim(); 
         const price = parseFloat(newProductPrice.value);
 
         if (!name || !imgName || isNaN(price)) { 
-            alert("Lütfen Ürün Adı, Resim Kodu ve Fiyatı eksiksiz girin."); 
+            alert("Eksik bilgi girdiniz."); 
             return; 
         }
 
-        let products = JSON.parse(localStorage.getItem('myProductsV2')) || {};
-        
-        // Veriyi Obje olarak kaydediyoruz: {fiyat: 100, resim: 'giyotin'}
+        let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
         products[name] = { price: price, img: imgName };
-        
-        localStorage.setItem('myProductsV2', JSON.stringify(products));
+        localStorage.setItem('myProductsV3', JSON.stringify(products));
 
-        alert(`${name} kaydedildi! (Resim kodu: ${imgName})`);
-        newProductName.value = ''; 
-        newProductImage.value = '';
-        newProductPrice.value = '';
+        alert(`${name} kaydedildi!`);
+        newProductName.value = ''; newProductImage.value = ''; newProductPrice.value = '';
         loadProducts();
     });
 
     function loadProducts() {
-        // V2 veritabanını kullanıyoruz
-        let products = JSON.parse(localStorage.getItem('myProductsV2')) || {};
+        let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
         productSelect.innerHTML = '<option value="">Seçiniz...</option>';
         deleteSelect.innerHTML = '<option value="">Seçiniz...</option>';
 
         for (let [name, data] of Object.entries(products)) {
             let option1 = document.createElement('option');
-            // Value içine tüm datayı gömüyoruz
             option1.value = JSON.stringify({ ...data, name: name }); 
             option1.textContent = `${name} ($${data.price})`; 
             productSelect.appendChild(option1);
@@ -120,55 +158,49 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('dollarRate', rate);
 
         const area = (totalWidth * h) / 10000; 
-        const totalUSD = area * selectedData.price;
-        const totalTL = totalUSD * rate;
+        const rawTotalTL = (area * selectedData.price) * rate; // Ham Tutar
+        
+        // --- AKILLI YUVARLAMA UYGULANIYOR ---
+        const roundedTotalTL = smartRound(rawTotalTL);
 
-        const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+        const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
         const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-        resultArea.querySelector('.result-big').textContent = fmtTL.format(totalTL);
-        detailInfo.innerHTML = `Toplam En: ${totalWidth} cm | Yükseklik: ${h} cm <br> Alan: ${area.toFixed(2)} m² <br> (${fmtUSD.format(totalUSD)})`;
+        resultArea.querySelector('.result-big').textContent = fmtTL.format(roundedTotalTL);
+        detailInfo.innerHTML = `Alan: ${area.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
 
         lastCalculation = {
             productName: selectedData.name,
-            productImg: selectedData.img, // Resim adını buradan alıyoruz
+            productImg: selectedData.img, 
             area: area.toFixed(2),
-            totalPrice: fmtTL.format(totalTL),
+            totalPrice: fmtTL.format(roundedTotalTL), // Yuvarlanmış fiyatı görsele gönder
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
 
-    // --- A4 GÖRSEL OLUŞTURUCU ---
-    // Bu fonksiyon artık asenkron (async) çünkü resmin yüklenmesini bekleyecek
+    // --- A4 GÖRSEL OLUŞTURUCU (DEĞİŞMEDİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
-        // A4 Boyutu (Piksel cinsinden yüksek kalite)
-        // Genişlik: 1080px, Yükseklik: 1527px (A4 Oranı)
         const width = 1080;
         const height = 1527;
-        
         canvas.width = width;
         canvas.height = height;
 
-        // Arka Plan Beyaz
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // 1. LOGO (En Üst)
         const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // 2. ÜRÜN ADI (Logonun Altı)
-        let cursorY = 60 + logoHeight + 60; // İmleç konumu
+        let cursorY = 60 + logoHeight + 60; 
         
         ctx.fillStyle = '#333333';
         const fontSize = 70;
@@ -179,7 +211,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxWidth = 950;
         const lineHeight = 80;
 
-        // Satır Kaydırma Döngüsü
         const words = productName.split(' ');
         let line = '';
         for(let n = 0; n < words.length; n++) {
@@ -195,32 +226,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, cursorY);
 
-        // 3. ÜRÜN RESMİ (ORTA ALAN)
-        // Resmi yükle
         const imgName = lastCalculation.productImg;
-        // Klasördeki dosyayı bulmaya çalışır (jpg varsayılan)
         const productImgObj = new Image();
         productImgObj.src = imgName + ".jpg"; 
 
-        // Resmin yüklenmesini bekle (Promise)
         await new Promise((resolve, reject) => {
             productImgObj.onload = resolve;
-            productImgObj.onerror = resolve; // Hata olsa bile devam et (resimsiz basar)
+            productImgObj.onerror = resolve; 
         });
 
-        // Eğer resim yüklendiyse çiz
         if (productImgObj.complete && productImgObj.naturalWidth !== 0) {
-            cursorY += 40; // Yazıdan biraz boşluk
-            
-            // Resim Alanı (Kutu)
+            cursorY += 40; 
             const boxWidth = 900;
             const boxHeight = 600;
             const boxX = (width - boxWidth) / 2;
             
-            // Resmi orantılı sığdır (Cover/Contain mantığı)
             const hRatio = boxWidth / productImgObj.naturalWidth;
             const vRatio = boxHeight / productImgObj.naturalHeight;
-            const ratio = Math.min(hRatio, vRatio); // Sığdırmak için min, doldurmak için max
+            const ratio = Math.min(hRatio, vRatio);
             
             const centerShift_x = (boxWidth - productImgObj.naturalWidth * ratio) / 2;
             const centerShift_y = (boxHeight - productImgObj.naturalHeight * ratio) / 2; 
@@ -228,14 +251,11 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.drawImage(productImgObj, 0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
                 boxX + centerShift_x, cursorY + centerShift_y, productImgObj.naturalWidth * ratio, productImgObj.naturalHeight * ratio);
             
-            cursorY += boxHeight + 40; // İmleci resmin altına taşı
+            cursorY += boxHeight + 40; 
         } else {
-            // Resim bulunamazsa boşluk bırak
             cursorY += 600; 
         }
 
-        // 4. DETAYLAR VE FİYAT
-        // Çizgi
         ctx.beginPath();
         ctx.moveTo(200, cursorY);
         ctx.lineTo(880, cursorY);
@@ -257,7 +277,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = 'bold 120px Segoe UI, Arial';
         ctx.fillText(lastCalculation.totalPrice, width / 2, cursorY);
 
-        // 5. ALT BİLGİ (Footer) - En Alta Sabit
         const footerHeight = 200;
         const footerY = height - footerHeight;
         
@@ -279,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return canvas;
     }
 
-    // --- İNDİR BUTONU ---
     if(downloadBtn) {
         downloadBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
@@ -291,7 +309,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- PAYLAŞ BUTONU ---
     if(shareBtn) {
         shareBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
@@ -313,14 +330,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // SİLME
     deleteProductBtn.addEventListener('click', () => {
         const nameToDelete = deleteSelect.value;
         if (!nameToDelete) return;
         if(confirm(`${nameToDelete} silinsin mi?`)) {
-            let products = JSON.parse(localStorage.getItem('myProductsV2')) || {};
+            let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
             delete products[nameToDelete];
-            localStorage.setItem('myProductsV2', JSON.stringify(products));
+            localStorage.setItem('myProductsV3', JSON.stringify(products));
             loadProducts();
         }
     });
