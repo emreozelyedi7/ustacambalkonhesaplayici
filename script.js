@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // --- A4 GÖRSEL OLUŞTURUCU (SABİT KOORDİNAT SİSTEMİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -210,28 +210,36 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.width = width;
         canvas.height = height;
 
+        // Arka Plan
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // 1. LOGO (Tepeden 60px başlar)
+        // --- TARİH (SAĞ ÜST KÖŞE) ---
+        // Burayı en başta yazdırıyoruz
+        ctx.textAlign = 'right'; // Sağa yasla
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px Segoe UI, Arial';
+        const today = new Date().toLocaleDateString('tr-TR');
+        ctx.fillText(today, width - 40, 50); // Sağdan 40px, Üstten 50px içeride
+
+        // --- MERKEZİ HİZALAMA BAŞLANGICI ---
+        ctx.textAlign = 'center'; // Diğerleri için tekrar merkeze al
+
+        // 1. LOGO
         const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // 2. ÜRÜN ADI (SABİT KONUM: Y = 320)
-        // Logo ne kadar büyük olursa olsun, yazı 320. pikselden başlar.
+        // 2. ÜRÜN ADI (SABİT KONUM Y=320)
         let textY = 320; 
-        
         ctx.fillStyle = '#333333';
-        // FONT KÜÇÜLTÜLDÜ (İsteğin üzerine 70px -> 40px)
         const fontSize = 40; 
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
-        ctx.textAlign = 'center';
         
         const productName = lastCalculation.productName;
         const maxWidth = 950;
-        const lineHeight = 50; // Satır aralığı da küçüldü
+        const lineHeight = 50;
 
         const words = productName.split(' ');
         let line = '';
@@ -248,13 +256,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
-        // 3. RESİM KUTUSU (SABİT KONUM: Y = 450)
-        // Yazı taşsa bile resim 450'den başlar (gerekirse yazı üstüne biner ama kaydırmaz).
-        // 40px font ile yazı 3-4 satır olsa bile 450'ye ulaşamaz, güvenli.
-        
+        // 3. RESİM KUTUSU (SABİT KONUM Y=450)
         const boxY = 450;
         const boxWidth = 900;
-        const boxHeight = 600; // Resim için ayrılan alan
+        const boxHeight = 600; 
         const boxX = (width - boxWidth) / 2;
 
         const imgName = lastCalculation.productImg;
@@ -282,8 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        // 4. DETAYLAR (SABİT KONUM: Y = 1100)
-        // Resim alanı 450 + 600 = 1050'de biter. Biz 1100'den başlatıyoruz.
+        // 4. DETAYLAR (SABİT KONUM Y=1100)
         let detailsY = 1100;
 
         ctx.beginPath();
@@ -307,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = 'bold 120px Segoe UI, Arial';
         ctx.fillText(lastCalculation.totalPrice, width / 2, detailsY);
 
-        // 5. FOOTER (SABİT ALT)
+        // 5. FOOTER
         const footerHeight = 200;
         const footerY = height - footerHeight;
         
@@ -321,10 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = '32px Segoe UI, Arial';
         ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140);
 
-        ctx.fillStyle = '#999999';
-        ctx.font = '24px Segoe UI, Arial';
-        const today = new Date().toLocaleDateString('tr-TR');
-        ctx.fillText(today, width / 2, footerY - 20);
+        // (Eski tarih buradaydı, sildik)
 
         return canvas;
     }
