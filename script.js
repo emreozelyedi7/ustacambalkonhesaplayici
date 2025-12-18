@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const calculateBtn = document.getElementById('calculateBtn');
     const downloadBtn = document.getElementById('downloadBtn'); 
-    const shareBtn = document.getElementById('shareBtn'); 
+    const shareBtn = document.getElementById('shareBtn');
+    // YENİ BUTON
+    const shareVideoBtn = document.getElementById('shareVideoBtn');
     
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
@@ -64,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
             shareBtn.style.display = 'none';
+            shareVideoBtn.style.display = 'none'; // Videoyu da gizle
             lastCalculation = null;
         }
     });
@@ -189,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
+        if(shareVideoBtn) shareVideoBtn.style.display = 'block'; // Video butonunu aç
 
         lastCalculation = {
             productName: selectedData.name,
@@ -198,6 +202,53 @@ document.addEventListener('DOMContentLoaded', function() {
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
+
+    // --- VİDEO PAYLAŞMA BUTONU MANTIĞI ---
+    if(shareVideoBtn) {
+        shareVideoBtn.addEventListener('click', async () => {
+            if (!lastCalculation || !lastCalculation.productImg) {
+                alert("Ürün bilgisi bulunamadı.");
+                return;
+            }
+
+            const videoFileName = lastCalculation.productImg + ".mp4"; // Örn: 1.mp4
+            
+            // Kullanıcıya bilgi ver
+            const originalText = shareVideoBtn.textContent;
+            shareVideoBtn.textContent = "Video Hazırlanıyor... (Lütfen bekleyin)";
+            shareVideoBtn.disabled = true;
+
+            try {
+                // Videoyu sunucudan çek (Blob olarak)
+                const response = await fetch(videoFileName);
+                if (!response.ok) {
+                    throw new Error("Video dosyası bulunamadı. Klasörde '" + videoFileName + "' olduğundan emin olun.");
+                }
+                const blob = await response.blob();
+                
+                // Dosya oluştur
+                const file = new File([blob], videoFileName, { type: 'video/mp4' });
+
+                // Paylaş
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: lastCalculation.productName,
+                        text: `${lastCalculation.productName} Tanıtım Videosu`
+                    });
+                } else {
+                    alert("Tarayıcınız video paylaşımını desteklemiyor.");
+                }
+            } catch (error) {
+                alert("Hata: " + error.message);
+            } finally {
+                // Butonu eski haline getir
+                shareVideoBtn.textContent = originalText;
+                shareVideoBtn.disabled = false;
+            }
+        });
+    }
+
 
     // --- A4 GÖRSEL OLUŞTURUCU ---
     async function createCanvasImage() {
@@ -210,20 +261,17 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.width = width;
         canvas.height = height;
 
-        // Arka Plan
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // --- TARİH (SAĞ ÜST KÖŞE) ---
-        // Burayı en başta yazdırıyoruz
-        ctx.textAlign = 'right'; // Sağa yasla
+        // Tarih
+        ctx.textAlign = 'right'; 
         ctx.fillStyle = '#888888';
         ctx.font = '24px Segoe UI, Arial';
         const today = new Date().toLocaleDateString('tr-TR');
-        ctx.fillText(today, width - 40, 50); // Sağdan 40px, Üstten 50px içeride
+        ctx.fillText(today, width - 40, 50); 
 
-        // --- MERKEZİ HİZALAMA BAŞLANGICI ---
-        ctx.textAlign = 'center'; // Diğerleri için tekrar merkeze al
+        ctx.textAlign = 'center'; 
 
         // 1. LOGO
         const logoWidth = 500; 
@@ -231,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // 2. ÜRÜN ADI (SABİT KONUM Y=320)
+        // 2. ÜRÜN ADI
         let textY = 320; 
         ctx.fillStyle = '#333333';
         const fontSize = 40; 
@@ -256,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
-        // 3. RESİM KUTUSU (SABİT KONUM Y=450)
+        // 3. RESİM KUTUSU
         const boxY = 450;
         const boxWidth = 900;
         const boxHeight = 600; 
@@ -287,9 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        // 4. DETAYLAR (SABİT KONUM Y=1100)
+        // 4. DETAYLAR
         let detailsY = 1100;
-
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
         ctx.lineTo(880, detailsY);
@@ -314,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // 5. FOOTER
         const footerHeight = 200;
         const footerY = height - footerHeight;
-        
         ctx.fillStyle = '#F37021'; 
         ctx.fillRect(0, footerY, width, footerHeight);
 
@@ -324,8 +370,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         ctx.font = '32px Segoe UI, Arial';
         ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140);
-
-        // (Eski tarih buradaydı, sildik)
 
         return canvas;
     }
