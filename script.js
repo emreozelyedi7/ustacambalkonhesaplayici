@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const widthContainer = document.getElementById('width-container');
     const addWidthBtn = document.getElementById('addWidthBtn');
-    const resetInputsBtn = document.getElementById('resetInputsBtn'); // Yeni Buton
+    const resetInputsBtn = document.getElementById('resetInputsBtn'); 
     
     const heightInput = document.getElementById('height');
     
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAndLoadDefaults();
     loadRate();
 
-    // --- EN EKLEME BUTONU ---
+    // --- EN EKLEME ---
     addWidthBtn.addEventListener('click', () => {
         const currentCount = widthContainer.querySelectorAll('.width-input').length;
         const nextCount = currentCount + 1;
@@ -57,23 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
         widthContainer.appendChild(newInput);
     });
 
-    // --- SIFIRLAMA (TEMİZLEME) BUTONU ---
+    // --- SIFIRLAMA ---
     resetInputsBtn.addEventListener('click', () => {
         if(confirm("Ölçüler temizlensin mi?")) {
-            // 1. En kutularını sıfırla (Sadece 1 tane kalsın)
             widthContainer.innerHTML = '<input type="number" class="width-input" placeholder="En 1">';
-            
-            // 2. Yükseklik temizle
             heightInput.value = '';
-            
-            // 3. Sonuç ekranını temizle
             resultArea.querySelector('.result-big').textContent = '0.00 ₺';
             detailInfo.innerHTML = '';
-            
-            // 4. Butonları gizle
             downloadBtn.style.display = 'none';
             shareBtn.style.display = 'none';
-            
             lastCalculation = null;
         }
     });
@@ -99,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
+    // --- AKILLI YUVARLAMA (0-500-1000) ---
     function smartRound(amount) {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
@@ -158,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- HESAPLAMA ---
+    // --- HESAPLAMA (ÖZEL KURALLAR EKLENDİ) ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
@@ -181,16 +174,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
         localStorage.setItem('dollarRate', rate);
 
-        const area = (totalWidth * h) / 10000; 
-        const rawTotalTL = (area * selectedData.price) * rate; 
+        // 1. GERÇEK ALAN (Müşteriye gösterilecek olan)
+        // cm cinsinden hesaplandığı için 10000'e bölüp m2 buluyoruz
+        let realArea = (totalWidth * h) / 10000; 
+
+        // 2. FİYATLANDIRMA İÇİN GİZLİ HESAP
+        let pricingHeight = h;
+        let pricingArea = realArea;
+
+        const productName = selectedData.name.toLowerCase();
+
+        // KURAL: CAM BALKON İSE
+        if (productName.includes("cam balkon")) {
+            // Min Yükseklik Kuralı: 1.8m (180cm)
+            if (h < 180) {
+                pricingHeight = 180;
+                // Yükseklik değiştiği için alanı o anlık tekrar hesapla
+                pricingArea = (totalWidth * pricingHeight) / 10000;
+            }
+            
+            // Min m2 Kuralı: 5m2
+            if (pricingArea < 5) {
+                pricingArea = 5;
+            }
+        }
         
+        // KURAL: GİYOTİN İSE
+        else if (productName.includes("giyotin")) {
+            // Min m2 Kuralı: 7m2
+            if (pricingArea < 7) {
+                pricingArea = 7;
+            }
+        }
+
+        // Fiyatı "pricingArea" (gizli m2) üzerinden hesapla
+        const rawTotalTL = (pricingArea * selectedData.price) * rate; 
+        
+        // Akıllı yuvarlama uygula
         const roundedTotalTL = smartRound(rawTotalTL);
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
         const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
         resultArea.querySelector('.result-big').textContent = fmtTL.format(roundedTotalTL);
-        detailInfo.innerHTML = `Toplam En: ${totalWidth} cm | Yükseklik: ${h} cm <br> Alan: ${area.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
+        
+        // Ekranda da bilgi verelim (Burada gerçek alanı gösteriyoruz ama fiyat farklı çıkabilir)
+        detailInfo.innerHTML = `Hesaplanan Alan: ${realArea.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
@@ -198,8 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
         lastCalculation = {
             productName: selectedData.name,
             productImg: selectedData.img, 
-            area: area.toFixed(2),
-            totalPrice: fmtTL.format(roundedTotalTL),
+            area: realArea.toFixed(2), // Görselde GERÇEK ALAN yazacak
+            totalPrice: fmtTL.format(roundedTotalTL), // Görselde YUVARLANMIŞ/MİNİMUM FİYAT yazacak
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
