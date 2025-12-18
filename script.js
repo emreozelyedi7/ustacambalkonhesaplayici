@@ -48,12 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
     addWidthBtn.addEventListener('click', () => {
         const currentCount = widthContainer.querySelectorAll('.width-input').length;
         const nextCount = currentCount + 1;
-        
         const newInput = document.createElement('input');
         newInput.type = 'number';
         newInput.className = 'width-input';
         newInput.placeholder = `En ${nextCount}`; 
-        
         widthContainer.appendChild(newInput);
     });
 
@@ -91,12 +89,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
-    // --- AKILLI YUVARLAMA (0-500-1000) ---
     function smartRound(amount) {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
         let remainder = integerPart % 1000;
-
         if (remainder === 0) { return integerPart; } 
         else if (remainder <= 500) { return thousands + 500; } 
         else { return thousands + 1000; }
@@ -121,13 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = newProductName.value.trim();
         const imgName = newProductImage.value.trim(); 
         const price = parseFloat(newProductPrice.value);
-
         if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
-
         let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
         products[name] = { price: price, img: imgName };
         localStorage.setItem('myProductsV3', JSON.stringify(products));
-
         alert(`${name} kaydedildi!`);
         newProductName.value = ''; newProductImage.value = ''; newProductPrice.value = '';
         loadProducts();
@@ -137,13 +130,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let products = JSON.parse(localStorage.getItem('myProductsV3')) || {};
         productSelect.innerHTML = '<option value="">Seçiniz...</option>';
         deleteSelect.innerHTML = '<option value="">Seçiniz...</option>';
-
         for (let [name, data] of Object.entries(products)) {
             let option1 = document.createElement('option');
             option1.value = JSON.stringify({ ...data, name: name }); 
             option1.textContent = `${name} ($${data.price})`; 
             productSelect.appendChild(option1);
-
             let option2 = document.createElement('option');
             option2.value = name;
             option2.textContent = name;
@@ -158,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const allWidthInputs = document.querySelectorAll('.width-input');
         let totalWidth = 0;
-        
         allWidthInputs.forEach(input => {
             const val = parseFloat(input.value);
             if (!isNaN(val)) totalWidth += val;
@@ -174,10 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         localStorage.setItem('dollarRate', rate);
 
-        // 1. GERÇEK ALAN
         let realArea = (totalWidth * h) / 10000; 
-
-        // 2. GİZLİ HESAP
         let pricingHeight = h;
         let pricingArea = realArea;
         const productName = selectedData.name.toLowerCase();
@@ -187,24 +174,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 pricingHeight = 180;
                 pricingArea = (totalWidth * pricingHeight) / 10000;
             }
-            if (pricingArea < 5) {
-                pricingArea = 5;
-            }
+            if (pricingArea < 5) pricingArea = 5;
         }
         else if (productName.includes("giyotin")) {
-            if (pricingArea < 7) {
-                pricingArea = 7;
-            }
+            if (pricingArea < 7) pricingArea = 7;
         }
 
         const rawTotalTL = (pricingArea * selectedData.price) * rate; 
         const roundedTotalTL = smartRound(rawTotalTL);
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-
         resultArea.querySelector('.result-big').textContent = fmtTL.format(roundedTotalTL);
-        
         detailInfo.innerHTML = `Hesaplanan Alan: ${realArea.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
@@ -219,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // --- A4 GÖRSEL OLUŞTURUCU (SABİT KUTU MANTIĞI EKLENDİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU (SABİT KOORDİNAT SİSTEMİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -233,23 +213,25 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // 1. LOGO
+        // 1. LOGO (Tepeden 60px başlar)
         const logoWidth = 500; 
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // 2. ÜRÜN ADI
-        let cursorY = 60 + logoHeight + 60; 
+        // 2. ÜRÜN ADI (SABİT KONUM: Y = 320)
+        // Logo ne kadar büyük olursa olsun, yazı 320. pikselden başlar.
+        let textY = 320; 
         
         ctx.fillStyle = '#333333';
-        const fontSize = 70;
+        // FONT KÜÇÜLTÜLDÜ (İsteğin üzerine 70px -> 40px)
+        const fontSize = 40; 
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
         ctx.textAlign = 'center';
         
         const productName = lastCalculation.productName;
         const maxWidth = 950;
-        const lineHeight = 80;
+        const lineHeight = 50; // Satır aralığı da küçüldü
 
         const words = productName.split(' ');
         let line = '';
@@ -257,87 +239,75 @@ document.addEventListener('DOMContentLoaded', function() {
             const testLine = line + words[n] + ' ';
             const metrics = ctx.measureText(testLine);
             if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, width / 2, cursorY);
+                ctx.fillText(line, width / 2, textY);
                 line = words[n] + ' ';
-                cursorY += lineHeight;
+                textY += lineHeight;
             } else {
                 line = testLine;
             }
         }
-        ctx.fillText(line, width / 2, cursorY);
+        ctx.fillText(line, width / 2, textY);
 
-        // --- 3. SABİT RESİM KUTUSU (BURASI DEĞİŞTİ) ---
-        // Yazı nerede biterse bitsin, resim kutusu oradan biraz aşağıda başlar.
-        // Ama kutunun YÜKSEKLİĞİ ve GENİŞLİĞİ sabittir.
+        // 3. RESİM KUTUSU (SABİT KONUM: Y = 450)
+        // Yazı taşsa bile resim 450'den başlar (gerekirse yazı üstüne biner ama kaydırmaz).
+        // 40px font ile yazı 3-4 satır olsa bile 450'ye ulaşamaz, güvenli.
         
-        cursorY += 40; // Yazıdan sonraki boşluk
-        
-        // Sabit Kutu Ölçüleri
+        const boxY = 450;
         const boxWidth = 900;
-        const boxHeight = 650; // Resim için ayrılan sabit dikey alan
+        const boxHeight = 600; // Resim için ayrılan alan
         const boxX = (width - boxWidth) / 2;
-        const boxY = cursorY; // Kutunun başladığı Y koordinatı
 
-        // Resmi Yükle
         const imgName = lastCalculation.productImg;
         const productImgObj = new Image();
         productImgObj.src = imgName + ".jpg"; 
 
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             productImgObj.onload = resolve;
             productImgObj.onerror = resolve; 
         });
 
         if (productImgObj.complete && productImgObj.naturalWidth !== 0) {
-            // Resmi kutunun içine "FIT" (Sığdır) mantığıyla yerleştir
-            // En boy oranını koru, kutudan taşma, kutuyu ortala.
-            
             const hRatio = boxWidth / productImgObj.naturalWidth;
             const vRatio = boxHeight / productImgObj.naturalHeight;
-            const ratio = Math.min(hRatio, vRatio); // Sığdırmak için küçüğü al
+            const ratio = Math.min(hRatio, vRatio);
             
             const newImgWidth = productImgObj.naturalWidth * ratio;
             const newImgHeight = productImgObj.naturalHeight * ratio;
 
-            // Ortalamak için kaydırma miktarları
             const centerShift_x = (boxWidth - newImgWidth) / 2;
             const centerShift_y = (boxHeight - newImgHeight) / 2;
             
-            // Resmi Çiz (Kutunun X'i + Kaydırma, Kutunun Y'si + Kaydırma)
             ctx.drawImage(productImgObj, 
                 0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        // --- 4. ALT METİNLERİN BAŞLANGIÇ YERİ ---
-        // ÖNEMLİ: İmleci resmin yüksekliğine göre değil, KUTUNUN yüksekliğine göre aşağı atıyoruz.
-        // Böylece resim küçük de olsa büyük de olsa alt metin hep aynı yerden başlar.
-        
-        cursorY = boxY + boxHeight + 40; 
+        // 4. DETAYLAR (SABİT KONUM: Y = 1100)
+        // Resim alanı 450 + 600 = 1050'de biter. Biz 1100'den başlatıyoruz.
+        let detailsY = 1100;
 
-        // Çizgi
         ctx.beginPath();
-        ctx.moveTo(200, cursorY);
-        ctx.lineTo(880, cursorY);
+        ctx.moveTo(200, detailsY);
+        ctx.lineTo(880, detailsY);
         ctx.strokeStyle = '#e0e0e0';
         ctx.lineWidth = 5;
         ctx.stroke();
 
-        cursorY += 80;
+        detailsY += 60;
         ctx.fillStyle = '#666666';
         ctx.font = '50px Segoe UI, Arial';
-        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²`, width / 2, cursorY);
+        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²`, width / 2, detailsY);
         
-        cursorY += 50;
+        detailsY += 50;
         ctx.font = 'italic 30px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.details, width / 2, cursorY);
+        ctx.fillText(lastCalculation.details, width / 2, detailsY);
 
-        cursorY += 120; 
+        detailsY += 100; 
         ctx.fillStyle = '#28a745'; 
         ctx.font = 'bold 120px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.totalPrice, width / 2, cursorY);
+        ctx.fillText(lastCalculation.totalPrice, width / 2, detailsY);
 
-        // 5. FOOTER (En alt)
+        // 5. FOOTER (SABİT ALT)
         const footerHeight = 200;
         const footerY = height - footerHeight;
         
