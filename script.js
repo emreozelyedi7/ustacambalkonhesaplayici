@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (LİNKLER EKLENDİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ ---
 const defaultProductsData = {
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
         price: 140, 
@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsSection = document.getElementById('settings-section');
     
     const currentRateInput = document.getElementById('currentRate');
+    const customerNameInput = document.getElementById('customerName'); // YENİ
     const productSelect = document.getElementById('productSelect');
     
     const widthContainer = document.getElementById('width-container');
@@ -46,15 +47,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const calculateBtn = document.getElementById('calculateBtn');
     const downloadBtn = document.getElementById('downloadBtn'); 
     const shareBtn = document.getElementById('shareBtn');
-    const shareVideoBtn = document.getElementById('shareVideoBtn'); // Video Link Butonu
+    const shareVideoBtn = document.getElementById('shareVideoBtn');
     
+    // RAPOR BUTONLARI
+    const downloadReportBtn = document.getElementById('downloadReportBtn');
+    const clearReportBtn = document.getElementById('clearReportBtn');
+
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
     const mainLogo = document.getElementById('mainLogo'); 
 
     const newProductName = document.getElementById('newProductName');
     const newProductImage = document.getElementById('newProductImage'); 
-    const newProductVideo = document.getElementById('newProductVideo'); // Yeni Input
+    const newProductVideo = document.getElementById('newProductVideo'); 
     const newProductPrice = document.getElementById('newProductPrice');
     const saveProductBtn = document.getElementById('saveProductBtn');
     const deleteSelect = document.getElementById('deleteSelect');
@@ -82,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(confirm("Ölçüler temizlensin mi?")) {
             widthContainer.innerHTML = '<input type="number" class="width-input" placeholder="En 1">';
             heightInput.value = '';
+            customerNameInput.value = ''; // İsim de silinsin
             resultArea.querySelector('.result-big').textContent = '0.00 ₺';
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
@@ -122,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function checkAndLoadDefaults() {
-        if (!localStorage.getItem('myProductsV4')) { // V4'e geçtik (Linkler eklendiği için)
+        if (!localStorage.getItem('myProductsV4')) {
             localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
         }
         loadProducts();
@@ -139,16 +145,13 @@ document.addEventListener('DOMContentLoaded', function() {
     saveProductBtn.addEventListener('click', () => {
         const name = newProductName.value.trim();
         const imgName = newProductImage.value.trim(); 
-        const videoLink = newProductVideo.value.trim(); // Linki al
+        const videoLink = newProductVideo.value.trim(); 
         const price = parseFloat(newProductPrice.value);
 
         if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
 
         let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
-        
-        // Veriyi kaydet (Link dahil)
         products[name] = { price: price, img: imgName, video: videoLink };
-        
         localStorage.setItem('myProductsV4', JSON.stringify(products));
 
         alert(`${name} kaydedildi!`);
@@ -172,10 +175,62 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- RAPORLAMA FONKSİYONLARI ---
+    function addToReport(customer, product, area, price) {
+        let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        const newReport = {
+            date: new Date().toLocaleString('tr-TR'),
+            customer: customer || "İsimsiz Müşteri",
+            product: product,
+            area: area,
+            price: price
+        };
+        reports.push(newReport);
+        localStorage.setItem('dailyReports', JSON.stringify(reports));
+    }
+
+    downloadReportBtn.addEventListener('click', () => {
+        let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        if (reports.length === 0) {
+            alert("Henüz kayıtlı bir rapor yok.");
+            return;
+        }
+
+        // CSV Başlıkları
+        let csvContent = "Tarih,Musteri Adi,Urun,m2,Fiyat\n";
+
+        reports.forEach(row => {
+            // CSV'de virgül karışıklığı olmasın diye verileri tırnak içine alıyoruz
+            let rowString = `"${row.date}","${row.customer}","${row.product}","${row.area}","${row.price}"`;
+            csvContent += rowString + "\n";
+        });
+
+        // Türkçe Karakter Sorunu İçin BOM ekliyoruz (\uFEFF)
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        const today = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Gunluk_Rapor_${today}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    clearReportBtn.addEventListener('click', () => {
+        if(confirm("Tüm günlük rapor kayıtları silinecek. Emin misiniz?")) {
+            localStorage.removeItem('dailyReports');
+            alert("Rapor temizlendi.");
+        }
+    });
+
+
     // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
+        const custName = customerNameInput.value.trim(); // Müşteri Adı
         
         const allWidthInputs = document.querySelectorAll('.width-input');
         let totalWidth = 0;
@@ -214,52 +269,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const roundedTotalTL = smartRound(rawTotalTL);
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        resultArea.querySelector('.result-big').textContent = fmtTL.format(roundedTotalTL);
-        detailInfo.innerHTML = `Hesaplanan Alan: ${realArea.toFixed(2)} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
+        const formattedPrice = fmtTL.format(roundedTotalTL);
+        const formattedArea = realArea.toFixed(2);
+
+        resultArea.querySelector('.result-big').textContent = formattedPrice;
+        detailInfo.innerHTML = `Hesaplanan Alan: ${formattedArea} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
         if(shareVideoBtn) shareVideoBtn.style.display = 'block'; 
 
+        // --- RAPORA EKLE ---
+        addToReport(custName, selectedData.name, formattedArea, formattedPrice);
+
         lastCalculation = {
             productName: selectedData.name,
             productImg: selectedData.img, 
-            productVideo: selectedData.video || "", // Link yoksa boş bırak
-            area: realArea.toFixed(2),
-            totalPrice: fmtTL.format(roundedTotalTL), 
+            productVideo: selectedData.video || "",
+            area: formattedArea,
+            totalPrice: formattedPrice, 
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
 
-    // --- LİNK PAYLAŞMA BUTONU ---
+    // --- LİNK PAYLAŞMA ---
     if(shareVideoBtn) {
         shareVideoBtn.addEventListener('click', async () => {
             if (!lastCalculation || !lastCalculation.productVideo) {
-                alert("Bu ürün için video linki tanımlanmamış.");
+                alert("Bu ürün için video linki yok.");
                 return;
             }
-
             const videoUrl = lastCalculation.productVideo;
             const shareData = {
                 title: lastCalculation.productName,
-                text: `${lastCalculation.productName} Tanıtım Videosunu buradan izleyebilirsiniz:\n${videoUrl}`
-                // url: videoUrl // Bazı tarayıcılar url'i ayrı, bazıları text içinde sever. Text en garantisidir.
+                text: `${lastCalculation.productName} Tanıtım Videosu:\n${videoUrl}`
             };
 
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
-                } catch (err) {
-                    console.log("Paylaşım iptal edildi.");
-                }
+                } catch (err) { console.log("İptal"); }
             } else {
-                // Bilgisayarda ise linki kopyala
                 navigator.clipboard.writeText(`${lastCalculation.productName} Video: ${videoUrl}`);
-                alert("Video linki kopyalandı! Müşteriye yapıştırabilirsiniz.");
+                alert("Link kopyalandı.");
             }
         });
     }
-
 
     // --- A4 GÖRSEL OLUŞTURUCU (DEĞİŞMEDİ) ---
     async function createCanvasImage() {

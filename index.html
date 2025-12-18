@@ -46,7 +46,7 @@
     #downloadBtn { background-color: #ff9800; display: none; margin-top: 15px; }
     #shareBtn { background-color: #007bff; display: none; margin-top: 10px; }
     
-    /* Video Link Butonu (Instagram Rengi) */
+    /* Video Butonu */
     #shareVideoBtn { 
         background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
         color: white;
@@ -70,6 +70,20 @@
     #addWidthBtn { background-color: #17a2b8; padding: 10px; font-size: 14px; margin-top: 0; flex: 2; }
     #resetInputsBtn { background-color: #6c757d; padding: 10px; font-size: 14px; margin-top: 0; flex: 1; }
 
+    /* RAPOR BÖLÜMÜ STİLLERİ */
+    .report-section {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 8px;
+    }
+    .report-btn {
+        background-color: #17a2b8;
+        color: white;
+    }
+    .report-btn:hover { background-color: #138496; }
+
   </style>
 </head>
 <body>
@@ -81,7 +95,7 @@
 
   <div class="nav">
     <a id="nav-calc" class="active">HESAP MAKİNESİ</a>
-    <a id="nav-settings">AYARLAR</a>
+    <a id="nav-settings">AYARLAR / RAPOR</a>
   </div>
 
   <div id="calc-section" class="container">
@@ -89,6 +103,9 @@
       <label>Dolar Kuru (TL):</label>
       <input type="number" id="currentRate" placeholder="Örn: 34.50" step="0.01">
     </div>
+
+    <label>Müşteri Adı:</label>
+    <input type="text" id="customerName" placeholder="Örn: Ahmet Bey">
 
     <label>Ürün Seçin:</label>
     <select id="productSelect">
@@ -143,9 +160,16 @@
     <label>Kayıtlı Ürünler:</label>
     <select id="deleteSelect"></select>
     <button class="danger" id="deleteProductBtn">SİL</button>
+
+    <div class="report-section">
+        <h3 style="margin-top:0; color:#856404; text-align:center;">📊 Günlük Tablo</h3>
+        <p style="font-size:12px; color:#856404; text-align:center;">Hesapla butonuna bastığınız her işlem buraya kaydedilir.</p>
+        <button id="downloadReportBtn" class="report-btn">📥 Tabloyu İndir (Excel)</button>
+        <button id="clearReportBtn" class="danger">🗑️ Tabloyu Temizle</button>
+    </div>
   </div>
 </div>
 
-<script src="script.js?v=11"></script>
+<script src="script.js?v=13"></script>
 </body>
 </html>
