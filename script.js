@@ -262,14 +262,29 @@ document.addEventListener('DOMContentLoaded', function() {
             priceLabel = "Cam Balkon Sistem Bedeli";
         }
         else if (productName.includes("giyotin")) {
-            // GİYOTİN ÖZEL KURALI: >320cm ise iki parça
-            if (totalWidth > 320) {
+            // GİYOTİN ÖZEL KURALI: 
+            // 1. Kural: 800cm üzeri ise 3 parça
+            if (totalWidth > 800) {
+                let pieceWidth = totalWidth / 3;
+                let onePieceArea = (pieceWidth * h) / 10000;
+                
+                // Her bir parça minimum 7m2
+                if (onePieceArea < 7) onePieceArea = 7;
+                
+                pricingArea = onePieceArea * 3;
+                priceLabel = "3 Adet Giyotin Sistem";
+            }
+            // 2. Kural: 370cm üzeri ise 2 parça (Eski 320 kuralı değişti)
+            else if (totalWidth > 370) {
                 let halfWidth = totalWidth / 2;
                 let onePieceArea = (halfWidth * h) / 10000;
                 if (onePieceArea < 7) onePieceArea = 7;
+                
                 pricingArea = onePieceArea * 2;
                 priceLabel = "2 Adet Giyotin Sistem"; 
-            } else {
+            } 
+            // 3. Kural: Standart tek parça
+            else {
                 if (pricingArea < 7) pricingArea = 7;
                 priceLabel = "1 Adet Giyotin Sistem"; 
             }
