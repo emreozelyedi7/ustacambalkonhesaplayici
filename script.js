@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const currentRateInput = document.getElementById('currentRate');
     const customerNameInput = document.getElementById('customerName'); 
-    const salesChannelInput = document.getElementById('salesChannel'); // YENİ
+    const salesChannelInput = document.getElementById('salesChannel'); 
     const productSelect = document.getElementById('productSelect');
     
     const widthContainer = document.getElementById('width-container');
@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetInputsBtn = document.getElementById('resetInputsBtn'); 
     
     const heightInput = document.getElementById('height');
+    
+    // YENİ EK MALZEME INPUTLARI
+    const extraItemNameInput = document.getElementById('extraItemName');
+    const extraItemPriceInput = document.getElementById('extraItemPrice');
     
     const calculateBtn = document.getElementById('calculateBtn');
     const downloadBtn = document.getElementById('downloadBtn'); 
@@ -71,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAndLoadDefaults();
     loadRate();
 
-    // --- EN EKLEME ---
     addWidthBtn.addEventListener('click', () => {
         const currentCount = widthContainer.querySelectorAll('.width-input').length;
         const nextCount = currentCount + 1;
@@ -82,13 +85,14 @@ document.addEventListener('DOMContentLoaded', function() {
         widthContainer.appendChild(newInput);
     });
 
-    // --- SIFIRLAMA ---
     resetInputsBtn.addEventListener('click', () => {
         if(confirm("Ölçüler temizlensin mi?")) {
             widthContainer.innerHTML = '<input type="number" class="width-input" placeholder="En 1">';
             heightInput.value = '';
             customerNameInput.value = ''; 
-            salesChannelInput.value = 'WhatsApp'; // Varsayılana dön
+            salesChannelInput.value = 'WhatsApp';
+            extraItemNameInput.value = ''; // Temizle
+            extraItemPriceInput.value = ''; // Temizle
             resultArea.querySelector('.result-big').textContent = '0.00 ₺';
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
@@ -98,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- MENÜ GEÇİŞLERİ ---
     navCalc.addEventListener('click', () => {
         calcSection.classList.remove('hidden');
         settingsSection.classList.add('hidden');
@@ -136,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.resetDefaultProducts = function() {
-        if(confirm("Tüm listeniz silinecek ve varsayılan ürünler yüklenecek. Onaylıyor musunuz?")) {
+        if(confirm("Tüm listeniz silinecek. Onaylıyor musunuz?")) {
             localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
             loadProducts();
             alert("Varsayılan ürünler yüklendi!");
@@ -176,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- RAPORLAMA FONKSİYONLARI (KANAL EKLENDİ) ---
     function addToReport(customer, channel, product, area, price) {
         let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
         const newReport = {
@@ -193,23 +195,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     downloadReportBtn.addEventListener('click', () => {
         let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
-        if (reports.length === 0) {
-            alert("Henüz kayıtlı bir rapor yok.");
-            return;
-        }
-
-        // CSV Başlıkları (Kanal Eklendi)
+        if (reports.length === 0) { alert("Rapor yok."); return; }
         let csvContent = "Tarih,Musteri Adi,Kanal,Urun,m2,Fiyat\n";
-
         reports.forEach(row => {
             let rowString = `"${row.date}","${row.customer}","${row.channel}","${row.product}","${row.area}","${row.price}"`;
             csvContent += rowString + "\n";
         });
-
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
-        
         const today = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
         link.setAttribute("href", url);
         link.setAttribute("download", `Gunluk_Rapor_${today}.csv`);
@@ -225,13 +219,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- HESAPLAMA ---
+    // --- HESAPLAMA (GİYOTİN VE EK MALZEME GÜNCELLEMESİ) ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
         const custName = customerNameInput.value.trim(); 
-        const channel = salesChannelInput.value; // Seçilen Kanal
+        const channel = salesChannelInput.value; 
         
+        // Ek Malzemeler
+        const extraName = extraItemNameInput.value.trim();
+        const extraPrice = parseFloat(extraItemPriceInput.value) || 0;
+
         const allWidthInputs = document.querySelectorAll('.width-input');
         let totalWidth = 0;
         allWidthInputs.forEach(input => {
@@ -250,11 +248,12 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('dollarRate', rate);
 
         let realArea = (totalWidth * h) / 10000; 
-        let pricingHeight = h;
         let pricingArea = realArea;
         const productName = selectedData.name.toLowerCase();
 
+        // 1. ÜRÜN FİYATINI HESAPLA
         if (productName.includes("cam balkon")) {
+            let pricingHeight = h;
             if (h < 180) {
                 pricingHeight = 180;
                 pricingArea = (totalWidth * pricingHeight) / 10000;
@@ -262,32 +261,68 @@ document.addEventListener('DOMContentLoaded', function() {
             if (pricingArea < 5) pricingArea = 5;
         }
         else if (productName.includes("giyotin")) {
-            if (pricingArea < 7) pricingArea = 7;
+            // GİYOTİN ÖZEL KURALI: Genişlik > 320 cm ise ikiye böl
+            if (totalWidth > 320) {
+                let halfWidth = totalWidth / 2;
+                let onePieceArea = (halfWidth * h) / 10000;
+                
+                // Her parça için min 7m2 kontrolü
+                if (onePieceArea < 7) onePieceArea = 7;
+                
+                // Toplam fatura alanı (2 parça)
+                pricingArea = onePieceArea * 2;
+            } else {
+                // Standart min 7 kuralı
+                if (pricingArea < 7) pricingArea = 7;
+            }
         }
 
-        const rawTotalTL = (pricingArea * selectedData.price) * rate; 
-        const roundedTotalTL = smartRound(rawTotalTL);
+        // Sadece Ürün Tutarı (Ham)
+        const rawProductTotalTL = (pricingArea * selectedData.price) * rate; 
+        // Ürün Tutarını Yuvarla
+        const roundedProductTotalTL = smartRound(rawProductTotalTL);
+
+        // 2. GENEL TOPLAMI HESAPLA (Ürün + Ekstra)
+        const grandTotalTL = roundedProductTotalTL + extraPrice;
+        // İsteğe bağlı: Genel toplamı da tekrar akıllı yuvarlamaya sokabiliriz ama 
+        // matematiksel tutarlılık için genelde toplama işlemi yeterlidir. 
+        // Kullanıcı "Toplam tutar" düzgün görünsün dediği için son bir düzeltme yapılabilir mi?
+        // Zaten yuvarlanmış sayı + tam sayı = düzgün sayıdır.
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        const formattedPrice = fmtTL.format(roundedTotalTL);
+        
+        const formattedProductPrice = fmtTL.format(roundedProductTotalTL);
+        const formattedExtraPrice = fmtTL.format(extraPrice);
+        const formattedGrandTotal = fmtTL.format(grandTotalTL);
         const formattedArea = realArea.toFixed(2);
 
-        resultArea.querySelector('.result-big').textContent = formattedPrice;
-        detailInfo.innerHTML = `Hesaplanan Alan: ${formattedArea} m² <br> Ham Tutar: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(rawTotalTL)}`;
+        // Ekrana Yazdır
+        resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
+        detailInfo.innerHTML = `Alan: ${formattedArea} m² <br> Ürün: ${formattedProductPrice} + Ek: ${formattedExtraPrice}`;
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
         if(shareVideoBtn) shareVideoBtn.style.display = 'block'; 
 
-        // --- RAPORA EKLE (KANAL İLE) ---
-        addToReport(custName, channel, selectedData.name, formattedArea, formattedPrice);
+        // Rapor
+        let logProductName = selectedData.name;
+        if(extraName) logProductName += ` + ${extraName}`;
+        
+        addToReport(custName, channel, logProductName, formattedArea, formattedGrandTotal);
 
         lastCalculation = {
             productName: selectedData.name,
             productImg: selectedData.img, 
             productVideo: selectedData.video || "",
             area: formattedArea,
-            totalPrice: formattedPrice, 
+            
+            // Fiyat detayları için objeye ekliyoruz
+            productPriceStr: formattedProductPrice,
+            extraName: extraName,
+            extraPrice: extraPrice,
+            extraPriceStr: formattedExtraPrice,
+            grandTotalStr: formattedGrandTotal,
+            
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
@@ -296,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if(shareVideoBtn) {
         shareVideoBtn.addEventListener('click', async () => {
             if (!lastCalculation || !lastCalculation.productVideo) {
-                alert("Bu ürün için video linki yok.");
+                alert("Video linki yok.");
                 return;
             }
             const videoUrl = lastCalculation.productVideo;
@@ -304,11 +339,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: lastCalculation.productName,
                 text: `${lastCalculation.productName} Tanıtım Videosu:\n${videoUrl}`
             };
-
             if (navigator.share) {
-                try {
-                    await navigator.share(shareData);
-                } catch (err) { console.log("İptal"); }
+                try { await navigator.share(shareData); } catch (err) {}
             } else {
                 navigator.clipboard.writeText(`${lastCalculation.productName} Video: ${videoUrl}`);
                 alert("Link kopyalandı.");
@@ -316,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU (DEĞİŞMEDİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU (YENİ FİYAT DÜZENİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -343,15 +375,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        let textY = 320; 
+        // --- ÜRÜN ADI ---
+        let textY = 300; 
         ctx.fillStyle = '#333333';
         const fontSize = 40; 
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
         
-        const productName = lastCalculation.productName;
+        let productName = lastCalculation.productName;
+        // Eğer ek malzeme varsa ürün adının altına ekle (Görselde de görünsün)
+        if (lastCalculation.extraName) {
+            productName += ` + ${lastCalculation.extraName}`;
+        }
+
         const maxWidth = 950;
         const lineHeight = 50;
-
         const words = productName.split(' ');
         let line = '';
         for(let n = 0; n < words.length; n++) {
@@ -367,6 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
+        // --- RESİM KUTUSU ---
         const boxY = 450;
         const boxWidth = 900;
         const boxHeight = 600; 
@@ -385,19 +423,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const hRatio = boxWidth / productImgObj.naturalWidth;
             const vRatio = boxHeight / productImgObj.naturalHeight;
             const ratio = Math.min(hRatio, vRatio);
-            
             const newImgWidth = productImgObj.naturalWidth * ratio;
             const newImgHeight = productImgObj.naturalHeight * ratio;
-
             const centerShift_x = (boxWidth - newImgWidth) / 2;
             const centerShift_y = (boxHeight - newImgHeight) / 2;
-            
-            ctx.drawImage(productImgObj, 
-                0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
+            ctx.drawImage(productImgObj, 0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        let detailsY = 1100;
+        // --- DETAYLAR VE FİYAT (BURASI DEĞİŞTİ) ---
+        let detailsY = 1080; // Biraz yukarı aldım yer açmak için
+
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
         ctx.lineTo(880, detailsY);
@@ -405,20 +441,36 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.lineWidth = 5;
         ctx.stroke();
 
-        detailsY += 60;
-        ctx.fillStyle = '#666666';
-        ctx.font = '50px Segoe UI, Arial';
-        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²`, width / 2, detailsY);
-        
         detailsY += 50;
-        ctx.font = 'italic 30px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.details, width / 2, detailsY);
+        ctx.fillStyle = '#666666';
+        ctx.font = '40px Segoe UI, Arial';
+        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
+        
+        detailsY += 60;
 
-        detailsY += 100; 
-        ctx.fillStyle = '#28a745'; 
-        ctx.font = 'bold 120px Segoe UI, Arial';
-        ctx.fillText(lastCalculation.totalPrice, width / 2, detailsY);
+        // FİYAT GÖSTERİMİ
+        // Eğer Ek Malzeme varsa detaylı göster
+        if (lastCalculation.extraPrice > 0) {
+            ctx.font = 'bold 35px Segoe UI, Arial';
+            ctx.fillStyle = '#555555';
+            ctx.fillText(`Ürün Bedeli: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
+            
+            detailsY += 45;
+            ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
+            
+            detailsY += 70;
+            ctx.fillStyle = '#28a745'; 
+            ctx.font = 'bold 100px Segoe UI, Arial';
+            ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
+        } else {
+            // Yoksa eski usul tek fiyat
+            detailsY += 40;
+            ctx.fillStyle = '#28a745'; 
+            ctx.font = 'bold 120px Segoe UI, Arial';
+            ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
+        }
 
+        // FOOTER
         const footerHeight = 200;
         const footerY = height - footerHeight;
         ctx.fillStyle = '#F37021'; 

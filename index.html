@@ -46,7 +46,6 @@
     #downloadBtn { background-color: #ff9800; display: none; margin-top: 15px; }
     #shareBtn { background-color: #007bff; display: none; margin-top: 10px; }
     
-    /* Video Butonu */
     #shareVideoBtn { 
         background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
         color: white;
@@ -70,15 +69,18 @@
     #addWidthBtn { background-color: #17a2b8; padding: 10px; font-size: 14px; margin-top: 0; flex: 2; }
     #resetInputsBtn { background-color: #6c757d; padding: 10px; font-size: 14px; margin-top: 0; flex: 1; }
 
-    .report-section {
-        background-color: #fff3cd;
-        border: 1px solid #ffeeba;
-        padding: 15px;
-        margin-top: 20px;
-        border-radius: 8px;
-    }
+    .report-section { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin-top: 20px; border-radius: 8px; }
     .report-btn { background-color: #17a2b8; color: white; }
     .report-btn:hover { background-color: #138496; }
+
+    /* Ek Malzeme Alanı Stili */
+    .extra-box {
+        background-color: #f8f9fa;
+        border: 1px dashed #ced4da;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 15px;
+    }
 
   </style>
 </head>
@@ -130,10 +132,16 @@
     <label>Yükseklik (cm):</label>
     <input type="number" id="height" placeholder="Örn: 200">
 
+    <div class="extra-box">
+        <label style="margin-top:0;">Ek Malzeme / İşçilik (Opsiyonel):</label>
+        <input type="text" id="extraItemName" placeholder="Örn: Alüminyum Doğrama">
+        <input type="number" id="extraItemPrice" placeholder="Ek Tutar (TL)" style="margin-top:5px;">
+    </div>
+
     <button id="calculateBtn">HESAPLA</button>
 
     <div class="result" id="resultArea">
-      <span>Yuvarlanmış Tutar:</span>
+      <span>Genel Toplam:</span>
       <span class="result-big">0.00 ₺</span>
       <span style="font-size: 12px; opacity: 0.7; display:block; margin-top:5px;" id="detailInfo"></span>
     </div>
@@ -168,13 +176,13 @@
 
     <div class="report-section">
         <h3 style="margin-top:0; color:#856404; text-align:center;">📊 Günlük Tablo</h3>
-        <p style="font-size:12px; color:#856404; text-align:center;">Hesapla butonuna bastığınız her işlem buraya kaydedilir.</p>
+        <p style="font-size:12px; color:#856404; text-align:center;">Hesapla butonuna bastığınız her işlem telefonunuza kaydedilir.</p>
         <button id="downloadReportBtn" class="report-btn">📥 Tabloyu İndir (Excel)</button>
         <button id="clearReportBtn" class="danger">🗑️ Tabloyu Temizle</button>
     </div>
   </div>
 </div>
 
-<script src="script.js?v=14"></script>
+<script src="script.js?v=15"></script>
 </body>
 </html>
