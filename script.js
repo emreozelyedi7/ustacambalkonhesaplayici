@@ -250,8 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let pricingArea = realArea;
         const productName = selectedData.name.toLowerCase();
         
-        // FİYAT ETİKETİ BELİRLEME (1 Adet Giyotin vs.)
-        let priceLabel = "Cam Balkon Sistem Bedeli"; // Varsayılan
+        let priceLabel = "Cam Balkon Sistem Bedeli"; 
 
         // 1. ÜRÜN FİYATINI HESAPLA
         if (productName.includes("cam balkon")) {
@@ -270,11 +269,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 let onePieceArea = (halfWidth * h) / 10000;
                 if (onePieceArea < 7) onePieceArea = 7;
                 pricingArea = onePieceArea * 2;
-                
-                priceLabel = "2 Adet Giyotin Sistem"; // Etiket Güncellendi
+                priceLabel = "2 Adet Giyotin Sistem"; 
             } else {
                 if (pricingArea < 7) pricingArea = 7;
-                priceLabel = "1 Adet Giyotin Sistem"; // Etiket Güncellendi
+                priceLabel = "1 Adet Giyotin Sistem"; 
             }
         }
 
@@ -306,16 +304,12 @@ document.addEventListener('DOMContentLoaded', function() {
             productImg: selectedData.img, 
             productVideo: selectedData.video || "",
             area: formattedArea,
-            
-            // Yeni Etiket Sistemi
-            priceLabel: priceLabel, // "Ürün Bedeli" yerine geçecek dinamik yazı
-
+            priceLabel: priceLabel, 
             productPriceStr: formattedProductPrice,
             extraName: extraName,
             extraPrice: extraPrice,
             extraPriceStr: formattedExtraPrice,
             grandTotalStr: formattedGrandTotal,
-            
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
@@ -340,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU (BOŞLUK VE HİZALAMA DÜZELTİLDİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU (HASSAS DÜZENLEME YAPILDI) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -367,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // --- ÜRÜN ADI (KONUM YUKARI ALINDI: 300 -> 260) ---
         let textY = 260; 
         ctx.fillStyle = '#333333';
         const fontSize = 40; 
@@ -395,7 +388,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
-        // --- RESİM KUTUSU (KONUM YUKARI ALINDI: 450 -> 410) ---
         const boxY = 410;
         const boxWidth = 900;
         const boxHeight = 600; 
@@ -422,8 +414,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        // --- DETAYLAR ---
-        let detailsY = 1080;
+        // --- DETAYLAR VE FİYAT (FERAH DÜZENLEME) ---
+        let detailsY = 1040; // Biraz daha yukarı alındı
 
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
@@ -437,51 +429,48 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = '40px Segoe UI, Arial';
         ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
         
-        // BOŞLUK ARTTIRILDI (50 -> 60)
-        detailsY += 60;
+        detailsY += 50; // Alan ile fiyat arasına boşluk
 
-        // FİYAT GÖSTERİMİ (İÇ İÇE GEÇME DÜZELTİLDİ)
+        // FİYAT GÖSTERİMİ (BOŞLUKLAR ARTTIRILDI)
         if (lastCalculation.extraPrice > 0) {
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
-            
-            // Dinamik Etiket Kullanılıyor (örn: 2 Adet Giyotin)
             ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
             
-            // BOŞLUK ARTTIRILDI (45 -> 60)
-            detailsY += 60;
+            detailsY += 70; // Boşluk arttırıldı
             ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
             
-            // BOŞLUK ARTTIRILDI (70 -> 80)
-            detailsY += 80;
+            detailsY += 90; // Boşluk arttırıldı
             ctx.fillStyle = '#28a745'; 
             ctx.font = 'bold 100px Segoe UI, Arial';
             ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
         } else {
-            // Ek malzeme yoksa
             detailsY += 20; 
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
             ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
 
-            detailsY += 80;
+            detailsY += 80; // Boşluk arttırıldı
             ctx.fillStyle = '#28a745'; 
             ctx.font = 'bold 120px Segoe UI, Arial';
             ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
         }
 
-        // FOOTER
+        // FOOTER (YAZI BOYUTLARI KÜÇÜLTÜLDÜ VE HİZALANDI)
         const footerHeight = 200;
         const footerY = height - footerHeight;
         ctx.fillStyle = '#F37021'; 
         ctx.fillRect(0, footerY, width, footerHeight);
 
         ctx.fillStyle = '#ffffff'; 
-        ctx.font = 'bold 40px Segoe UI, Arial';
-        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80);
+        
+        // Garanti Yazısı
+        ctx.font = 'bold 36px Segoe UI, Arial'; // Boyut küçültüldü
+        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 90); // Biraz aşağı alındı
 
-        ctx.font = '32px Segoe UI, Arial';
-        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140);
+        // Taksit Yazısı
+        ctx.font = '28px Segoe UI, Arial'; // Boyut küçültüldü
+        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 150); // Biraz aşağı alındı
 
         return canvas;
     }
