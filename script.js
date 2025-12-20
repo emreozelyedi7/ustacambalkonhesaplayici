@@ -252,7 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let priceLabel = "Cam Balkon Sistem Bedeli"; 
 
-        // 1. ÜRÜN FİYATINI HESAPLA
         if (productName.includes("cam balkon")) {
             let pricingHeight = h;
             if (h < 180) {
@@ -334,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU (HASSAS DÜZENLEME YAPILDI) ---
+    // --- A4 GÖRSEL OLUŞTURUCU (BOŞLUK VE HİZALAMA DÜZELTİLDİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -361,6 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
+        // --- ÜRÜN ADI ---
         let textY = 260; 
         ctx.fillStyle = '#333333';
         const fontSize = 40; 
@@ -388,6 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
+        // --- RESİM KUTUSU ---
         const boxY = 410;
         const boxWidth = 900;
         const boxHeight = 600; 
@@ -414,8 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
         }
 
-        // --- DETAYLAR VE FİYAT (FERAH DÜZENLEME) ---
-        let detailsY = 1040; // Biraz daha yukarı alındı
+        // --- DETAYLAR VE FİYAT (HASSAS AYAR) ---
+        let detailsY = 1040;
 
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
@@ -429,34 +430,38 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = '40px Segoe UI, Arial';
         ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
         
-        detailsY += 50; // Alan ile fiyat arasına boşluk
+        detailsY += 50; 
 
-        // FİYAT GÖSTERİMİ (BOŞLUKLAR ARTTIRILDI)
+        // FİYAT GÖSTERİMİ
         if (lastCalculation.extraPrice > 0) {
+            // EK MALZEME VARSA
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
             ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
             
-            detailsY += 70; // Boşluk arttırıldı
+            detailsY += 70; 
             ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
             
-            detailsY += 90; // Boşluk arttırıldı
+            detailsY += 90; 
             ctx.fillStyle = '#28a745'; 
             ctx.font = 'bold 100px Segoe UI, Arial';
             ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
         } else {
-            detailsY += 20; 
+            // EK MALZEME YOKSA (BURASI DÜZELTİLDİ)
+            // Önceki overlap sorunu buradaydı. Boşlukları açtık.
+            detailsY += 40; 
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
             ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
 
-            detailsY += 80; // Boşluk arttırıldı
+            // Buradaki boşluğu 80px'den 130px'e çıkardık ki rakamlar yazıya değmesin
+            detailsY += 130; 
             ctx.fillStyle = '#28a745'; 
             ctx.font = 'bold 120px Segoe UI, Arial';
             ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
         }
 
-        // FOOTER (YAZI BOYUTLARI KÜÇÜLTÜLDÜ VE HİZALANDI)
+        // FOOTER (YAZI BOYUTLARI EŞİTLENDİ)
         const footerHeight = 200;
         const footerY = height - footerHeight;
         ctx.fillStyle = '#F37021'; 
@@ -465,12 +470,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff'; 
         
         // Garanti Yazısı
-        ctx.font = 'bold 36px Segoe UI, Arial'; // Boyut küçültüldü
-        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 90); // Biraz aşağı alındı
+        ctx.font = 'bold 34px Segoe UI, Arial'; // 34px yapıldı
+        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80); 
 
         // Taksit Yazısı
-        ctx.font = '28px Segoe UI, Arial'; // Boyut küçültüldü
-        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 150); // Biraz aşağı alındı
+        ctx.font = 'bold 34px Segoe UI, Arial'; // Bu da 34px yapıldı (Eşitlendi)
+        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140); 
 
         return canvas;
     }
