@@ -1,27 +1,27 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V18) ---
 const defaultProductsData = {
-    "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
-        price: 140, 
-        img: "1", 
-        video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" 
+    "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
+        price: 140,
+        img: "1", // Artık kullanılmayacak ama veri yapısı bozulmasın diye duruyor
+        video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
-    "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
-        price: 165, 
+    "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
+        price: 165,
         img: "2",
         video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
-    "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": { 
-        price: 200, 
+    "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
+        price: 200,
         img: "4",
         video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
-    "Isıcamlı Temizlenebilir Giyotin": { 
-        price: 240, 
+    "Isıcamlı Temizlenebilir Giyotin": {
+        price: 240,
         img: "3",
         video: "https://www.instagram.com/reel/DSFKfGxCAWg/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
-    "Isıcamlı Sürme Sistem Cam Balkon": { 
-        price: 165, 
+    "Isıcamlı Sürme Sistem Cam Balkon": {
+        price: 165,
         img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     }
@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsSection = document.getElementById('settings-section');
     
     const currentRateInput = document.getElementById('currentRate');
-    const customerNameInput = document.getElementById('customerName'); 
-    const salesChannelInput = document.getElementById('salesChannel'); 
+    const customerNameInput = document.getElementById('customerName');
+    const salesChannelInput = document.getElementById('salesChannel');
     const productSelect = document.getElementById('productSelect');
     
     const widthContainer = document.getElementById('width-container');
     const addWidthBtn = document.getElementById('addWidthBtn');
-    const resetInputsBtn = document.getElementById('resetInputsBtn'); 
+    const resetInputsBtn = document.getElementById('resetInputsBtn');
     
     const heightInput = document.getElementById('height');
     
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const extraItemPriceInput = document.getElementById('extraItemPrice');
     
     const calculateBtn = document.getElementById('calculateBtn');
-    const downloadBtn = document.getElementById('downloadBtn'); 
+    const downloadBtn = document.getElementById('downloadBtn');
     const shareBtn = document.getElementById('shareBtn');
     const shareVideoBtn = document.getElementById('shareVideoBtn');
     
@@ -59,11 +59,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
-    const mainLogo = document.getElementById('mainLogo'); 
+    const mainLogo = document.getElementById('mainLogo');
 
     const newProductName = document.getElementById('newProductName');
-    const newProductImage = document.getElementById('newProductImage'); 
-    const newProductVideo = document.getElementById('newProductVideo'); 
+    const newProductImage = document.getElementById('newProductImage');
+    const newProductVideo = document.getElementById('newProductVideo');
     const newProductPrice = document.getElementById('newProductPrice');
     const saveProductBtn = document.getElementById('saveProductBtn');
     const deleteSelect = document.getElementById('deleteSelect');
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const newInput = document.createElement('input');
         newInput.type = 'number';
         newInput.className = 'width-input';
-        newInput.placeholder = `En ${nextCount}`; 
+        newInput.placeholder = `En ${nextCount}`;
         widthContainer.appendChild(newInput);
     });
 
@@ -89,15 +89,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if(confirm("Ölçüler temizlensin mi?")) {
             widthContainer.innerHTML = '<input type="number" class="width-input" placeholder="En 1">';
             heightInput.value = '';
-            customerNameInput.value = ''; 
+            customerNameInput.value = '';
             salesChannelInput.value = 'WhatsApp';
-            extraItemNameInput.value = ''; 
-            extraItemPriceInput.value = ''; 
+            extraItemNameInput.value = '';
+            extraItemPriceInput.value = '';
             resultArea.querySelector('.result-big').textContent = '0.00 ₺';
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
             shareBtn.style.display = 'none';
-            shareVideoBtn.style.display = 'none'; 
+            shareVideoBtn.style.display = 'none';
             lastCalculation = null;
         }
     });
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
         settingsSection.classList.add('hidden');
         navCalc.classList.add('active');
         navSettings.classList.remove('active');
-        loadProducts(); 
+        loadProducts();
     });
 
     navSettings.addEventListener('click', () => {
@@ -126,8 +126,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
         let remainder = integerPart % 1000;
-        if (remainder === 0) { return integerPart; } 
-        else if (remainder <= 500) { return thousands + 500; } 
+        if (remainder === 0) { return integerPart; }
+        else if (remainder <= 500) { return thousands + 500; }
         else { return thousands + 1000; }
     }
 
@@ -148,8 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     saveProductBtn.addEventListener('click', () => {
         const name = newProductName.value.trim();
-        const imgName = newProductImage.value.trim(); 
-        const videoLink = newProductVideo.value.trim(); 
+        const imgName = newProductImage.value.trim();
+        const videoLink = newProductVideo.value.trim();
         const price = parseFloat(newProductPrice.value);
 
         if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
@@ -169,8 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteSelect.innerHTML = '<option value="">Seçiniz...</option>';
         for (let [name, data] of Object.entries(products)) {
             let option1 = document.createElement('option');
-            option1.value = JSON.stringify({ ...data, name: name }); 
-            option1.textContent = `${name} ($${data.price})`; 
+            option1.value = JSON.stringify({ ...data, name: name });
+            option1.textContent = `${name} ($${data.price})`;
             productSelect.appendChild(option1);
             let option2 = document.createElement('option');
             option2.value = name;
@@ -223,8 +223,8 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
-        const custName = customerNameInput.value.trim(); 
-        const channel = salesChannelInput.value; 
+        const custName = customerNameInput.value.trim();
+        const channel = salesChannelInput.value;
         
         const extraName = extraItemNameInput.value.trim();
         const extraPrice = parseFloat(extraItemPriceInput.value) || 0;
@@ -246,11 +246,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         localStorage.setItem('dollarRate', rate);
 
-        let realArea = (totalWidth * h) / 10000; 
+        let realArea = (totalWidth * h) / 10000;
         let pricingArea = realArea;
         const productName = selectedData.name.toLowerCase();
         
-        let priceLabel = "Cam Balkon Sistem Bedeli"; 
+        let priceLabel = "Cam Balkon Sistem Bedeli";
+        // Çizim için parça sayısını takip edelim
+        let calculatedParcaSayisi = 1;
 
         if (productName.includes("cam balkon")) {
             let pricingHeight = h;
@@ -260,37 +262,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (pricingArea < 5) pricingArea = 5;
             priceLabel = "Cam Balkon Sistem Bedeli";
+            // Katlanır sistemde parça sayısı kanat sayısı gibi düşünülebilir ama
+            // çizim fonksiyonu bunu genişliğe göre kendi hesaplayacak.
         }
         else if (productName.includes("giyotin")) {
-            // GİYOTİN ÖZEL KURALI: 
-            // 1. Kural: 800cm üzeri ise 3 parça
-            if (totalWidth > 800) {
-                let pieceWidth = totalWidth / 3;
-                let onePieceArea = (pieceWidth * h) / 10000;
-                
-                // Her bir parça minimum 7m2
-                if (onePieceArea < 7) onePieceArea = 7;
-                
-                pricingArea = onePieceArea * 3;
-                priceLabel = "3 Adet Giyotin Sistem";
-            }
-            // 2. Kural: 370cm üzeri ise 2 parça (Eski 320 kuralı değişti)
-            else if (totalWidth > 370) {
+            // GİYOTİN ÖZEL KURALI (V18): >320cm ise iki parça
+            if (totalWidth > 320) {
                 let halfWidth = totalWidth / 2;
                 let onePieceArea = (halfWidth * h) / 10000;
                 if (onePieceArea < 7) onePieceArea = 7;
-                
                 pricingArea = onePieceArea * 2;
-                priceLabel = "2 Adet Giyotin Sistem"; 
-            } 
-            // 3. Kural: Standart tek parça
-            else {
+                priceLabel = "2 Adet Giyotin Sistem";
+                calculatedParcaSayisi = 2; // Çizim için önemli
+            } else {
                 if (pricingArea < 7) pricingArea = 7;
-                priceLabel = "1 Adet Giyotin Sistem"; 
+                priceLabel = "1 Adet Giyotin Sistem";
+                calculatedParcaSayisi = 1; // Çizim için önemli
             }
         }
 
-        const rawProductTotalTL = (pricingArea * selectedData.price) * rate; 
+        const rawProductTotalTL = (pricingArea * selectedData.price) * rate;
         const roundedProductTotalTL = smartRound(rawProductTotalTL);
         const grandTotalTL = roundedProductTotalTL + extraPrice;
 
@@ -306,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
-        if(shareVideoBtn) shareVideoBtn.style.display = 'block'; 
+        if(shareVideoBtn) shareVideoBtn.style.display = 'block';
 
         let logProductName = selectedData.name;
         if(extraName) logProductName += ` + ${extraName}`;
@@ -315,15 +306,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         lastCalculation = {
             productName: selectedData.name,
-            productImg: selectedData.img, 
+            // img: selectedData.img, // ARTIK GEREK YOK
             productVideo: selectedData.video || "",
             area: formattedArea,
-            priceLabel: priceLabel, 
+            priceLabel: priceLabel,
             productPriceStr: formattedProductPrice,
             extraName: extraName,
             extraPrice: extraPrice,
             extraPriceStr: formattedExtraPrice,
             grandTotalStr: formattedGrandTotal,
+            // Çizim için gerekli yeni veriler:
+            totalWidthCm: totalWidth,
+            heightCm: h,
+            parcaSayisi: calculatedParcaSayisi,
             details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
         };
     });
@@ -348,7 +343,107 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU (BOŞLUK VE HİZALAMA DÜZELTİLDİ) ---
+    // --- YENİ ÇİZİM FONKSİYONU ---
+    // Bu fonksiyon, fotoğraf yerine geçecek teknik çizimi yapar.
+    function drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, data) {
+        const pName = data.productName.toLowerCase();
+        const totalW = data.totalWidthCm;
+        const parca = data.parcaSayisi;
+
+        // Arka planı temizle (Hafif gri bir kutu)
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeStyle = '#bdc3c7';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Çizim Ayarları
+        ctx.strokeStyle = '#2c3e50'; // Profil rengi (koyu lacivert/gri)
+        ctx.lineWidth = 3;
+        const padding = 30; // Kutunun içinden boşluk
+        const drawX = boxX + padding;
+        const drawY = boxY + padding;
+        const drawW = boxWidth - (padding * 2);
+        const drawH = boxHeight - (padding * 2);
+
+        if (pName.includes("giyotin")) {
+            // --- GİYOTİN ÇİZİMİ (YATAY HASSASİYETLİ) ---
+            const pieceWidth = drawW / parca;
+            
+            for (let i = 0; i < parca; i++) {
+                const currentX = drawX + (i * pieceWidth);
+                
+                // Dış Çerçeve (Her bir parça için)
+                ctx.strokeRect(currentX, drawY, pieceWidth, drawH);
+
+                // İç Yatay Çizgiler (3 Panelli görünüm için 2 çizgi)
+                const panelHeight = drawH / 3;
+                // 1. Yatay Çizgi (Sabit ile orta cam arası)
+                ctx.beginPath();
+                ctx.moveTo(currentX, drawY + panelHeight);
+                ctx.lineTo(currentX + pieceWidth, drawY + panelHeight);
+                ctx.stroke();
+                
+                // 2. Yatay Çizgi (Orta ile alt cam arası)
+                ctx.beginPath();
+                ctx.moveTo(currentX, drawY + (panelHeight * 2));
+                ctx.lineTo(currentX + pieceWidth, drawY + (panelHeight * 2));
+                ctx.stroke();
+
+                // Alt kısma korkuluk detayı (opsiyonel, daha kalın çizgi)
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(currentX + 5, drawY + drawH - 5);
+                ctx.lineTo(currentX + pieceWidth - 5, drawY + drawH - 5);
+                ctx.stroke();
+                ctx.lineWidth = 3; // Eski kalınlığa dön
+            }
+
+        } else {
+            // --- KATLANIR/SÜRME ÇİZİMİ (DİKEY HASSASİYETLİ) ---
+            // Tahmini kanat sayısı hesapla (Örn: her 65cm için bir kanat)
+            let panelCount = Math.ceil(totalW / 65);
+            if (panelCount < 2) panelCount = 2; // En az 2 kanat olsun
+
+            const panelWidth = drawW / panelCount;
+
+            // Dış Ana Çerçeve
+            ctx.strokeRect(drawX, drawY, drawW, drawH);
+
+            // Dikey Kayıtlar (Kanatlar)
+            for (let i = 1; i < panelCount; i++) {
+                const currentX = drawX + (i * panelWidth);
+                ctx.beginPath();
+                ctx.moveTo(currentX, drawY);
+                ctx.lineTo(currentX, drawY + drawH);
+                ctx.stroke();
+            }
+
+            // Cam efekti (Hafif mavi çapraz çizgiler) - Opsiyonel
+            ctx.strokeStyle = '#ecf0f1';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < panelCount; i++) {
+                 const panelX = drawX + (i * panelWidth);
+                 ctx.beginPath();
+                 // Basit bir yansıma efekti
+                 ctx.moveTo(panelX + 10, drawY + drawH - 20);
+                 ctx.lineTo(panelX + panelWidth - 10, drawY + 20);
+                 ctx.stroke();
+            }
+        }
+
+        // Altına Ölçü Bilgisi Yaz
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = 'bold 24px Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        let schemaLabel = `Sistem Şeması: ${totalW}cm Genişlik x ${data.heightCm}cm Yükseklik`;
+        if(pName.includes("giyotin") && parca > 1) {
+            schemaLabel += ` (${parca} Modül)`;
+        }
+        ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 35);
+    }
+
+    // --- A4 GÖRSEL OLUŞTURUCU (GÜNCELLENDİ: FOTOĞRAF YERİNE ÇİZİM) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -362,23 +457,23 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.textAlign = 'right'; 
+        ctx.textAlign = 'right';
         ctx.fillStyle = '#888888';
         ctx.font = '24px Segoe UI, Arial';
         const today = new Date().toLocaleDateString('tr-TR');
-        ctx.fillText(today, width - 40, 50); 
+        ctx.fillText(today, width - 40, 50);
 
-        ctx.textAlign = 'center'; 
+        ctx.textAlign = 'center';
 
-        const logoWidth = 500; 
+        const logoWidth = 500;
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
         // --- ÜRÜN ADI ---
-        let textY = 260; 
+        let textY = 260;
         ctx.fillStyle = '#333333';
-        const fontSize = 40; 
+        const fontSize = 40;
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
         
         let productName = lastCalculation.productName;
@@ -403,35 +498,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
-        // --- RESİM KUTUSU ---
+        // --- RESİM KUTUSU YERİNE ÇİZİM ALANI (GÜNCELLENDİ) ---
         const boxY = 410;
         const boxWidth = 900;
-        const boxHeight = 600; 
+        const boxHeight = 600;
         const boxX = (width - boxWidth) / 2;
 
-        const imgName = lastCalculation.productImg;
-        const productImgObj = new Image();
-        productImgObj.src = imgName + ".jpg"; 
-
-        await new Promise((resolve) => {
-            productImgObj.onload = resolve;
-            productImgObj.onerror = resolve; 
-        });
-
-        if (productImgObj.complete && productImgObj.naturalWidth !== 0) {
-            const hRatio = boxWidth / productImgObj.naturalWidth;
-            const vRatio = boxHeight / productImgObj.naturalHeight;
-            const ratio = Math.min(hRatio, vRatio);
-            const newImgWidth = productImgObj.naturalWidth * ratio;
-            const newImgHeight = productImgObj.naturalHeight * ratio;
-            const centerShift_x = (boxWidth - newImgWidth) / 2;
-            const centerShift_y = (boxHeight - newImgHeight) / 2;
-            ctx.drawImage(productImgObj, 0, 0, productImgObj.naturalWidth, productImgObj.naturalHeight,
-                boxX + centerShift_x, boxY + centerShift_y, newImgWidth, newImgHeight);
-        }
-
-        // --- DETAYLAR VE FİYAT (HASSAS AYAR) ---
-        let detailsY = 1040;
+        // ESKİ FOTOĞRAF KODU SİLİNDİ. YERİNE ÇİZİM FONKSİYONU ÇAĞRILIYOR:
+        drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, lastCalculation);
+        
+        // --- DETAYLAR VE FİYAT ---
+        // Çizim kutusunun altına yazı eklediğimiz için detaylar biraz daha aşağı kaymalı
+        let detailsY = 1040 + 40; // +40px extra boşluk
 
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
@@ -445,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = '40px Segoe UI, Arial';
         ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
         
-        detailsY += 50; 
+        detailsY += 50;
 
         // FİYAT GÖSTERİMİ
         if (lastCalculation.extraPrice > 0) {
@@ -454,43 +532,41 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillStyle = '#555555';
             ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
             
-            detailsY += 70; 
+            detailsY += 70;
             ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
             
-            detailsY += 90; 
-            ctx.fillStyle = '#28a745'; 
+            detailsY += 90;
+            ctx.fillStyle = '#28a745';
             ctx.font = 'bold 100px Segoe UI, Arial';
             ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
         } else {
-            // EK MALZEME YOKSA (BURASI DÜZELTİLDİ)
-            // Önceki overlap sorunu buradaydı. Boşlukları açtık.
-            detailsY += 40; 
+            // EK MALZEME YOKSA
+            detailsY += 40;
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
             ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
 
-            // Buradaki boşluğu 80px'den 130px'e çıkardık ki rakamlar yazıya değmesin
-            detailsY += 130; 
-            ctx.fillStyle = '#28a745'; 
+            detailsY += 130;
+            ctx.fillStyle = '#28a745';
             ctx.font = 'bold 120px Segoe UI, Arial';
             ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
         }
 
-        // FOOTER (YAZI BOYUTLARI EŞİTLENDİ)
+        // FOOTER
         const footerHeight = 200;
         const footerY = height - footerHeight;
-        ctx.fillStyle = '#F37021'; 
+        ctx.fillStyle = '#F37021';
         ctx.fillRect(0, footerY, width, footerHeight);
 
-        ctx.fillStyle = '#ffffff'; 
+        ctx.fillStyle = '#ffffff';
         
         // Garanti Yazısı
-        ctx.font = 'bold 34px Segoe UI, Arial'; // 34px yapıldı
-        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80); 
+        ctx.font = 'bold 34px Segoe UI, Arial';
+        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80);
 
         // Taksit Yazısı
-        ctx.font = 'bold 34px Segoe UI, Arial'; // Bu da 34px yapıldı (Eşitlendi)
-        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140); 
+        ctx.font = 'bold 34px Segoe UI, Arial';
+        ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140);
 
         return canvas;
     }
