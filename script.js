@@ -2,7 +2,7 @@
 const defaultProductsData = {
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
         price: 140,
-        img: "1", // Artık kullanılmayacak ama veri yapısı bozulmasın diye duruyor
+        img: "1", 
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
@@ -251,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const productName = selectedData.name.toLowerCase();
         
         let priceLabel = "Cam Balkon Sistem Bedeli";
-        // Çizim için parça sayısını takip edelim
         let calculatedParcaSayisi = 1;
 
         if (productName.includes("cam balkon")) {
@@ -262,8 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (pricingArea < 5) pricingArea = 5;
             priceLabel = "Cam Balkon Sistem Bedeli";
-            // Katlanır sistemde parça sayısı kanat sayısı gibi düşünülebilir ama
-            // çizim fonksiyonu bunu genişliğe göre kendi hesaplayacak.
         }
         else if (productName.includes("giyotin")) {
             // GİYOTİN ÖZEL KURALI (V18): >320cm ise iki parça
@@ -273,11 +270,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (onePieceArea < 7) onePieceArea = 7;
                 pricingArea = onePieceArea * 2;
                 priceLabel = "2 Adet Giyotin Sistem";
-                calculatedParcaSayisi = 2; // Çizim için önemli
+                calculatedParcaSayisi = 2; 
             } else {
                 if (pricingArea < 7) pricingArea = 7;
                 priceLabel = "1 Adet Giyotin Sistem";
-                calculatedParcaSayisi = 1; // Çizim için önemli
+                calculatedParcaSayisi = 1;
             }
         }
 
@@ -306,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         lastCalculation = {
             productName: selectedData.name,
-            // img: selectedData.img, // ARTIK GEREK YOK
             productVideo: selectedData.video || "",
             area: formattedArea,
             priceLabel: priceLabel,
@@ -315,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function() {
             extraPrice: extraPrice,
             extraPriceStr: formattedExtraPrice,
             grandTotalStr: formattedGrandTotal,
-            // Çizim için gerekli yeni veriler:
             totalWidthCm: totalWidth,
             heightCm: h,
             parcaSayisi: calculatedParcaSayisi,
@@ -343,104 +338,156 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- YENİ ÇİZİM FONKSİYONU ---
-    // Bu fonksiyon, fotoğraf yerine geçecek teknik çizimi yapar.
+    // --- GELİŞMİŞ TEKNİK ÇİZİM FONKSİYONU ---
     function drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, data) {
         const pName = data.productName.toLowerCase();
         const totalW = data.totalWidthCm;
+        const totalH = data.heightCm;
         const parca = data.parcaSayisi;
 
-        // Arka planı temizle (Hafif gri bir kutu)
-        ctx.fillStyle = '#f8f9fa';
-        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-        ctx.strokeStyle = '#bdc3c7';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-
-        // Çizim Ayarları
-        ctx.strokeStyle = '#2c3e50'; // Profil rengi (koyu lacivert/gri)
-        ctx.lineWidth = 3;
-        const padding = 30; // Kutunun içinden boşluk
+        // Renk Paleti
+        const profileColor = '#2c3e50'; // Antrasit Profil
+        const glassColor = '#eaf2f8';   // Hafif Buz Mavisi Cam
+        const dimColor = '#e74c3c';     // Ölçü Oku Rengi (Kırmızı)
+        
+        // Çizim alanı (Padding bırakalım ki ölçü okları sığsın)
+        const padding = 60;
         const drawX = boxX + padding;
         const drawY = boxY + padding;
         const drawW = boxWidth - (padding * 2);
         const drawH = boxHeight - (padding * 2);
 
+        // Arka planı temizle
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        
+        // Fonksiyon: Ölçü Oku Çiz (Mühendislik Stili)
+        function drawDimensionLine(x1, y1, x2, y2, text, vertical = false) {
+            ctx.strokeStyle = dimColor;
+            ctx.fillStyle = dimColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Ok uçları
+            const arrowSize = 10;
+            // Baş
+            ctx.beginPath(); ctx.arc(x1, y1, 3, 0, Math.PI*2); ctx.fill();
+            // Son
+            ctx.beginPath(); ctx.arc(x2, y2, 3, 0, Math.PI*2); ctx.fill();
+
+            // Yazı
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            if (vertical) {
+                ctx.save();
+                ctx.translate(x1 - 15, (y1 + y2) / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText(text, 0, 0);
+                ctx.restore();
+            } else {
+                ctx.fillText(text, (x1 + x2) / 2, y1 + 25);
+            }
+        }
+
+        // Ölçü Oklarını Çiz
+        // Alt (Genişlik)
+        drawDimensionLine(drawX, drawY + drawH + 15, drawX + drawW, drawY + drawH + 15, `${totalW} cm`);
+        // Sol (Yükseklik)
+        drawDimensionLine(drawX - 15, drawY + drawH, drawX - 15, drawY, `${totalH} cm`, true);
+
+        // --- SİSTEM ÇİZİMİ ---
+
         if (pName.includes("giyotin")) {
-            // --- GİYOTİN ÇİZİMİ (YATAY HASSASİYETLİ) ---
+            // --- GİYOTİN (PROFİLLİ VE KÜPEŞTELİ) ---
             const pieceWidth = drawW / parca;
-            
+            const profileThick = 6; // Profil kalınlığı
+
             for (let i = 0; i < parca; i++) {
                 const currentX = drawX + (i * pieceWidth);
                 
-                // Dış Çerçeve (Her bir parça için)
-                ctx.strokeRect(currentX, drawY, pieceWidth, drawH);
+                // 1. Cam Alanını Boya (Mavi)
+                ctx.fillStyle = glassColor;
+                ctx.fillRect(currentX, drawY, pieceWidth, drawH);
 
-                // İç Yatay Çizgiler (3 Panelli görünüm için 2 çizgi)
-                const panelHeight = drawH / 3;
-                // 1. Yatay Çizgi (Sabit ile orta cam arası)
-                ctx.beginPath();
-                ctx.moveTo(currentX, drawY + panelHeight);
-                ctx.lineTo(currentX + pieceWidth, drawY + panelHeight);
-                ctx.stroke();
+                // 2. Dış Kasa (Antrasit Profil)
+                ctx.fillStyle = profileColor;
+                // Sol Dikme
+                ctx.fillRect(currentX, drawY, profileThick, drawH);
+                // Sağ Dikme
+                ctx.fillRect(currentX + pieceWidth - profileThick, drawY, profileThick, drawH);
+                // Üst Kutu (Motorun olduğu yer - Kalın)
+                ctx.fillRect(currentX, drawY, pieceWidth, 40); 
+
+                // 3. Yatay Kayıtlar (Cam Birleşimleri)
+                const panelH = (drawH - 40) / 3; // Üst kutu hariç 3 parça
                 
-                // 2. Yatay Çizgi (Orta ile alt cam arası)
-                ctx.beginPath();
-                ctx.moveTo(currentX, drawY + (panelHeight * 2));
-                ctx.lineTo(currentX + pieceWidth, drawY + (panelHeight * 2));
-                ctx.stroke();
+                // Orta Kayıtlar
+                ctx.fillRect(currentX, drawY + 40 + panelH, pieceWidth, profileThick);
+                ctx.fillRect(currentX, drawY + 40 + (panelH * 2), pieceWidth, profileThick);
 
-                // Alt kısma korkuluk detayı (opsiyonel, daha kalın çizgi)
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(currentX + 5, drawY + drawH - 5);
-                ctx.lineTo(currentX + pieceWidth - 5, drawY + drawH - 5);
-                ctx.stroke();
-                ctx.lineWidth = 3; // Eski kalınlığa dön
+                // 4. Alt Küpeşte (En kalın profil)
+                ctx.fillRect(currentX, drawY + drawH - 20, pieceWidth, 20);
+
+                // Etiket
+                ctx.fillStyle = '#7f8c8d';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText("Sistem " + (i+1), currentX + (pieceWidth/2), drawY + drawH/2);
             }
 
         } else {
-            // --- KATLANIR/SÜRME ÇİZİMİ (DİKEY HASSASİYETLİ) ---
-            // Tahmini kanat sayısı hesapla (Örn: her 65cm için bir kanat)
+            // --- KATLANIR CAM (KANATLI VE KOLLU) ---
+            // Kanat hesapla (Her 60-70cm bir kanat)
             let panelCount = Math.ceil(totalW / 65);
-            if (panelCount < 2) panelCount = 2; // En az 2 kanat olsun
-
+            if (panelCount < 2) panelCount = 2;
             const panelWidth = drawW / panelCount;
+            const profileThick = 4;
 
-            // Dış Ana Çerçeve
-            ctx.strokeRect(drawX, drawY, drawW, drawH);
+            // 1. Kasa (Alt ve Üst Ray)
+            ctx.fillStyle = profileColor;
+            ctx.fillRect(drawX, drawY, drawW, 20); // Üst Ray
+            ctx.fillRect(drawX, drawY + drawH - 20, drawW, 20); // Alt Ray
 
-            // Dikey Kayıtlar (Kanatlar)
-            for (let i = 1; i < panelCount; i++) {
-                const currentX = drawX + (i * panelWidth);
-                ctx.beginPath();
-                ctx.moveTo(currentX, drawY);
-                ctx.lineTo(currentX, drawY + drawH);
-                ctx.stroke();
-            }
-
-            // Cam efekti (Hafif mavi çapraz çizgiler) - Opsiyonel
-            ctx.strokeStyle = '#ecf0f1';
-            ctx.lineWidth = 1;
+            // 2. Kanatlar
             for (let i = 0; i < panelCount; i++) {
-                 const panelX = drawX + (i * panelWidth);
-                 ctx.beginPath();
-                 // Basit bir yansıma efekti
-                 ctx.moveTo(panelX + 10, drawY + drawH - 20);
-                 ctx.lineTo(panelX + panelWidth - 10, drawY + 20);
-                 ctx.stroke();
+                const currentX = drawX + (i * panelWidth);
+                
+                // Cam Alanı
+                ctx.fillStyle = glassColor;
+                ctx.fillRect(currentX + profileThick, drawY + 20, panelWidth - (profileThick*2), drawH - 40);
+
+                // Dikey Profil (Bazalı sistem gibi)
+                ctx.fillStyle = '#bdc3c7'; // Gümüş/Alüminyum rengi kanat profili
+                ctx.fillRect(currentX, drawY + 20, profileThick, drawH - 40); // Sol çizgi
+                ctx.fillRect(currentX + panelWidth - profileThick, drawY + 20, profileThick, drawH - 40); // Sağ çizgi
+
+                // İlk kanada KOL çizelim
+                if (i === 0) {
+                    ctx.fillStyle = '#000000'; // Siyah Kol
+                    // Kol gövdesi
+                    ctx.fillRect(currentX + panelWidth - 15, drawY + (drawH/2) - 20, 10, 40);
+                    // Kol ucu
+                    ctx.beginPath();
+                    ctx.arc(currentX + panelWidth - 10, drawY + (drawH/2), 5, 0, Math.PI*2);
+                    ctx.fill();
+                }
             }
+            
+            // Dış Çerçeve (Kasa Yanlar)
+            ctx.fillStyle = profileColor;
+            ctx.fillRect(drawX, drawY, 10, drawH); // Sol Kasa
+            ctx.fillRect(drawX + drawW - 10, drawY, 10, drawH); // Sağ Kasa
         }
 
-        // Altına Ölçü Bilgisi Yaz
-        ctx.fillStyle = '#7f8c8d';
+        // Alt Bilgi
+        ctx.fillStyle = '#333';
         ctx.font = 'bold 24px Segoe UI, Arial';
         ctx.textAlign = 'center';
-        let schemaLabel = `Sistem Şeması: ${totalW}cm Genişlik x ${data.heightCm}cm Yükseklik`;
-        if(pName.includes("giyotin") && parca > 1) {
-            schemaLabel += ` (${parca} Modül)`;
-        }
-        ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 35);
+        let schemaLabel = `TEKNİK GÖRÜNÜŞ`;
+        ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight - 10);
     }
 
     // --- A4 GÖRSEL OLUŞTURUCU (GÜNCELLENDİ: FOTOĞRAF YERİNE ÇİZİM) ---
@@ -498,18 +545,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         ctx.fillText(line, width / 2, textY);
 
-        // --- RESİM KUTUSU YERİNE ÇİZİM ALANI (GÜNCELLENDİ) ---
+        // --- ÇİZİM ALANI ---
         const boxY = 410;
         const boxWidth = 900;
         const boxHeight = 600;
         const boxX = (width - boxWidth) / 2;
 
-        // ESKİ FOTOĞRAF KODU SİLİNDİ. YERİNE ÇİZİM FONKSİYONU ÇAĞRILIYOR:
+        // YENİ TEKNİK ÇİZİM FONKSİYONU
         drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, lastCalculation);
         
         // --- DETAYLAR VE FİYAT ---
-        // Çizim kutusunun altına yazı eklediğimiz için detaylar biraz daha aşağı kaymalı
-        let detailsY = 1040 + 40; // +40px extra boşluk
+        let detailsY = 1040 + 40; 
 
         ctx.beginPath();
         ctx.moveTo(200, detailsY);
@@ -527,7 +573,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // FİYAT GÖSTERİMİ
         if (lastCalculation.extraPrice > 0) {
-            // EK MALZEME VARSA
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
             ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
@@ -540,7 +585,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.font = 'bold 100px Segoe UI, Arial';
             ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
         } else {
-            // EK MALZEME YOKSA
             detailsY += 40;
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
@@ -560,11 +604,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         ctx.fillStyle = '#ffffff';
         
-        // Garanti Yazısı
         ctx.font = 'bold 34px Segoe UI, Arial';
         ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80);
 
-        // Taksit Yazısı
         ctx.font = 'bold 34px Segoe UI, Arial';
         ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140);
 
