@@ -263,8 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
             priceLabel = "Cam Balkon Sistem Bedeli";
         }
         else if (productName.includes("giyotin")) {
-            // GİYOTİN ÖZEL KURALI:
-            // 1. Kural: 800cm üzeri ise 3 parça
             if (totalWidth > 800) {
                 let pieceWidth = totalWidth / 3;
                 let onePieceArea = (pieceWidth * h) / 10000;
@@ -273,7 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 priceLabel = "3 Adet Giyotin Sistem";
                 calculatedParcaSayisi = 3;
             }
-            // 2. Kural: 370cm üzeri ise 2 parça
             else if (totalWidth > 370) {
                 let halfWidth = totalWidth / 2;
                 let onePieceArea = (halfWidth * h) / 10000;
@@ -282,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 priceLabel = "2 Adet Giyotin Sistem";
                 calculatedParcaSayisi = 2;
             }
-            // 3. Kural: Standart tek parça
             else {
                 if (pricingArea < 7) pricingArea = 7;
                 priceLabel = "1 Adet Giyotin Sistem";
@@ -361,7 +357,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
         
-        const padding = 60;
+        // Padding biraz azaltıldı
+        const padding = 50; 
         const drawX = boxX + padding;
         const drawY = boxY + padding;
         const drawW = boxWidth - (padding * 2);
@@ -463,12 +460,13 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#333';
         ctx.font = 'bold 24px Segoe UI, Arial';
         ctx.textAlign = 'center';
+        // TEKNİK GÖRÜNÜŞ YAZISI
+        // Kutu yüksekliği azaldığı için bu yazı da yukarı çıktı
         let schemaLabel = `TEKNİK GÖRÜNÜŞ`;
-        // Bu yazıyı kutunun biraz daha altına alıyoruz ki taşma yapmasın
-        ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 40);
+        ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 35);
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU (DİNAMİK HİZALAMA GÜNCELLEMESİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU (BOŞLUKLAR VE KUTU BOYUTU OPTİMİZE EDİLDİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -479,7 +477,6 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.width = width;
         canvas.height = height;
 
-        // 1. Arka Plan ve Sabit Öğeler
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
@@ -490,18 +487,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const today = new Date().toLocaleDateString('tr-TR');
         ctx.fillText(today, width - 40, 50);
 
-        // Logo (Sabit Konum)
+        // Logo
         ctx.textAlign = 'center';
         const logoWidth = 500;
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // --- DİNAMİK AKIŞ BAŞLANGICI ---
-        // Logodan sonraki ilk öğe için başlangıç Y koordinatı
-        let currentY = 60 + logoHeight + 80; // Logo altı + 80px boşluk
+        // --- AKIŞ BAŞLANGICI ---
+        // Logodan sonraki boşluğu azalttım (80 -> 40)
+        let currentY = 60 + logoHeight + 40; 
 
-        // 2. Ürün Adı (Dinamik Y)
+        // 2. Ürün Adı
         ctx.fillStyle = '#333330';
         const fontSize = 40;
         ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
@@ -516,35 +513,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const words = productName.split(' ');
         let line = '';
         
-        // Ürün adı kaç satır sürecek hesapla ve yaz
         for(let n = 0; n < words.length; n++) {
             const testLine = line + words[n] + ' ';
             const metrics = ctx.measureText(testLine);
             if (metrics.width > maxWidth && n > 0) {
                 ctx.fillText(line, width / 2, currentY);
                 line = words[n] + ' ';
-                currentY += lineHeight; // Bir sonraki satıra geç
+                currentY += lineHeight;
             } else {
                 line = testLine;
             }
         }
         ctx.fillText(line, width / 2, currentY);
         
-        // Ürün adından sonra boşluk bırak
-        currentY += 100; 
+        // Ürün adından sonraki boşluğu azalttım (100 -> 50)
+        currentY += 50; 
 
-        // 3. Teknik Çizim Alanı (Dinamik Y)
+        // 3. Teknik Çizim Alanı
+        // DİKKAT: Kutu yüksekliğini 600'den 450'ye düşürdüm.
+        // Bu hamle 150px yer kazandırdı.
         const boxWidth = 900;
-        const boxHeight = 600;
+        const boxHeight = 450; 
         const boxX = (width - boxWidth) / 2;
-        const boxY = currentY; // Çizim kutusu, ürün adının bittiği yerden başlar
+        const boxY = currentY; 
 
         drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, lastCalculation);
         
-        // Çizim kutusundan sonra boşluk bırak (Kutunun altındaki yazı için de pay bırakıyoruz)
-        currentY += boxHeight + 100;
+        // Kutudan sonraki boşluğu azalttım (100 -> 40)
+        // Kutu yüksekliği de azaldığı için toplamda ciddi yer açıldı.
+        currentY += boxHeight + 60; // 450 (kutu) + 60 (yazı payı ve boşluk)
 
-        // 4. Detaylar ve Fiyat (Dinamik Y)
+        // 4. Detaylar ve Fiyat
         let detailsY = currentY;
 
         // Ayırıcı Çizgi
@@ -555,26 +554,25 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.lineWidth = 5;
         ctx.stroke();
 
-        detailsY += 60; // Çizgiden sonra boşluk
+        detailsY += 40; // Çizgiden sonra boşluk (azaltıldı)
 
-        // Toplam Alan Bilgisi
+        // Toplam Alan
         ctx.fillStyle = '#666666';
         ctx.font = '40px Segoe UI, Arial';
         ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
         
-        detailsY += 60; // Alan bilgisinden sonra boşluk
+        detailsY += 50; // Alan bilgisinden sonra boşluk
 
         // Fiyat Gösterimi
         if (lastCalculation.extraPrice > 0) {
-            // Ek malzeme varsa
             ctx.font = 'bold 35px Segoe UI, Arial';
             ctx.fillStyle = '#555555';
             ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
             
-            detailsY += 70;
+            detailsY += 50; // Satır arası sıkılaştırıldı
             ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
             
-            detailsY += 100; // Fiyat öncesi büyük boşluk
+            detailsY += 80; // Toplam öncesi boşluk
             ctx.fillStyle = '#28a745';
             ctx.font = 'bold 100px Segoe UI, Arial';
             ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
@@ -585,18 +583,15 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillStyle = '#555555';
             ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
 
-            detailsY += 140; // Fiyat öncesi büyük boşluk
+            detailsY += 100; // Toplam öncesi boşluk (biraz daha yukarı çekildi)
             ctx.fillStyle = '#28a745';
-            ctx.font = 'bold 120px Segoe UI, Arial';
+            ctx.font = 'bold 100px Segoe UI, Arial'; // Font 120'den 100'e çekildi (daha zarif)
             ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
         }
 
-        // 5. Footer (Sabit Konum - En altta)
+        // 5. Footer (Sabit)
         const footerHeight = 200;
         const footerY = height - footerHeight;
-        
-        // Eğer içerik footer'a kadar taştıysa, footer'ı içeriğin altına itebiliriz (Opsiyonel)
-        // Şimdilik footer sabit kalsın, içerik sığmazsa tasarım sorunu vardır.
         
         ctx.fillStyle = '#F37021';
         ctx.fillRect(0, footerY, width, footerHeight);
