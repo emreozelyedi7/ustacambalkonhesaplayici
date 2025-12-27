@@ -167,16 +167,27 @@ document.addEventListener('DOMContentLoaded', function() {
         let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
         productSelect.innerHTML = '<option value="">Seçiniz...</option>';
         deleteSelect.innerHTML = '<option value="">Seçiniz...</option>';
+        
+        // Mevcut Ürünler
         for (let [name, data] of Object.entries(products)) {
             let option1 = document.createElement('option');
             option1.value = JSON.stringify({ ...data, name: name });
             option1.textContent = `${name} ($${data.price})`;
             productSelect.appendChild(option1);
+            
             let option2 = document.createElement('option');
             option2.value = name;
             option2.textContent = name;
             deleteSelect.appendChild(option2);
         }
+
+        // --- YENİ ÇOKLU SEÇİM OPSİYONU ---
+        let multiOption = document.createElement('option');
+        multiOption.value = "MULTI_CALCULATION";
+        multiOption.textContent = "✨ TÜM SİSTEMLER (Çoklu Fiyat Listesi) ✨";
+        multiOption.style.fontWeight = "bold";
+        multiOption.style.color = "#d35400";
+        productSelect.appendChild(multiOption);
     }
 
     function addToReport(customer, channel, product, area, price) {
@@ -222,13 +233,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
-        let selectedData = productSelect.value ? JSON.parse(productSelect.value) : null;
+        const selectedValue = productSelect.value;
         const custName = customerNameInput.value.trim();
         const channel = salesChannelInput.value;
-        
         const extraName = extraItemNameInput.value.trim();
         const extraPrice = parseFloat(extraItemPriceInput.value) || 0;
+        const h = parseFloat(heightInput.value);
 
+        // Genişlik Hesapla
         const allWidthInputs = document.querySelectorAll('.width-input');
         let totalWidth = 0;
         allWidthInputs.forEach(input => {
@@ -236,99 +248,175 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isNaN(val)) totalWidth += val;
         });
 
-        const h = parseFloat(heightInput.value);
-
+        // Kontroller
         if (isNaN(rate) || rate <= 0) { alert("Dolar Kuru girin."); return; }
-        if (!selectedData || totalWidth <= 0 || isNaN(h)) {
+        if (!selectedValue || totalWidth <= 0 || isNaN(h)) {
             alert("Ürün seçin ve ölçüleri girin.");
             return;
         }
 
         localStorage.setItem('dollarRate', rate);
-
         let realArea = (totalWidth * h) / 10000;
-        let pricingArea = realArea;
-        const productName = selectedData.name.toLowerCase();
-        
-        let priceLabel = "Cam Balkon Sistem Bedeli";
-        let calculatedParcaSayisi = 1;
-
-        if (productName.includes("cam balkon")) {
-            let pricingHeight = h;
-            if (h < 180) {
-                pricingHeight = 180;
-                pricingArea = (totalWidth * pricingHeight) / 10000;
-            }
-            if (pricingArea < 5) pricingArea = 5;
-            priceLabel = "Cam Balkon Sistem Bedeli";
-        }
-        else if (productName.includes("giyotin")) {
-            if (totalWidth > 800) {
-                let pieceWidth = totalWidth / 3;
-                let onePieceArea = (pieceWidth * h) / 10000;
-                if (onePieceArea < 7) onePieceArea = 7;
-                pricingArea = onePieceArea * 3;
-                priceLabel = "3 Adet Giyotin Sistem";
-                calculatedParcaSayisi = 3;
-            }
-            else if (totalWidth > 370) {
-                let halfWidth = totalWidth / 2;
-                let onePieceArea = (halfWidth * h) / 10000;
-                if (onePieceArea < 7) onePieceArea = 7;
-                pricingArea = onePieceArea * 2;
-                priceLabel = "2 Adet Giyotin Sistem";
-                calculatedParcaSayisi = 2;
-            }
-            else {
-                if (pricingArea < 7) pricingArea = 7;
-                priceLabel = "1 Adet Giyotin Sistem";
-                calculatedParcaSayisi = 1;
-            }
-        }
-
-        const rawProductTotalTL = (pricingArea * selectedData.price) * rate;
-        const roundedProductTotalTL = smartRound(rawProductTotalTL);
-        const grandTotalTL = roundedProductTotalTL + extraPrice;
-
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        
-        const formattedProductPrice = fmtTL.format(roundedProductTotalTL);
-        const formattedExtraPrice = fmtTL.format(extraPrice);
-        const formattedGrandTotal = fmtTL.format(grandTotalTL);
-        const formattedArea = realArea.toFixed(2);
 
-        resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
-        detailInfo.innerHTML = `Alan: ${formattedArea} m² <br> Ürün: ${formattedProductPrice} + Ek: ${formattedExtraPrice}`;
+        // --- SENARYO KONTROLÜ: TEKLİ Mİ ÇOKLU MU? ---
+        if (selectedValue === "MULTI_CALCULATION") {
+            // --- ÇOKLU ÜRÜN HESAPLAMA MODU ---
+            let allProducts = JSON.parse(localStorage.getItem('myProductsV4')) || defaultProductsData;
+            let multiResults = [];
+
+            for (let [pName, pData] of Object.entries(allProducts)) {
+                // SÜRME SİSTEM HARİÇ
+                if (pName.toLowerCase().includes("sürme")) continue;
+
+                // Fiyat Hesaplama Mantığı (Tekli ile aynı kurallar)
+                let pricingArea = realArea;
+                let calculatedParca = 1;
+
+                if (pName.toLowerCase().includes("cam balkon")) {
+                    // Katlanır/Sürme Kuralları
+                    let pricingHeight = h;
+                    if (h < 180) {
+                        pricingHeight = 180;
+                        pricingArea = (totalWidth * pricingHeight) / 10000;
+                    }
+                    if (pricingArea < 5) pricingArea = 5;
+                } 
+                else if (pName.toLowerCase().includes("giyotin")) {
+                    // Giyotin Kuralları
+                    if (totalWidth > 800) {
+                        let pieceWidth = totalWidth / 3;
+                        let onePieceArea = (pieceWidth * h) / 10000;
+                        if (onePieceArea < 7) onePieceArea = 7;
+                        pricingArea = onePieceArea * 3;
+                    } else if (totalWidth > 370) {
+                        let halfWidth = totalWidth / 2;
+                        let onePieceArea = (halfWidth * h) / 10000;
+                        if (onePieceArea < 7) onePieceArea = 7;
+                        pricingArea = onePieceArea * 2;
+                    } else {
+                        if (pricingArea < 7) pricingArea = 7;
+                    }
+                }
+
+                let rawTotal = (pricingArea * pData.price) * rate;
+                let roundedTotal = smartRound(rawTotal) + extraPrice; // Ek malzeme varsa hepsine eklenir
+
+                multiResults.push({
+                    name: pName,
+                    totalPrice: roundedTotal,
+                    formattedPrice: fmtTL.format(roundedTotal)
+                });
+            }
+
+            // Sonuç Gösterimi (Ekranda)
+            let htmlList = `<ul style="list-style:none; padding:0;">`;
+            multiResults.forEach(item => {
+                htmlList += `<li style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
+                    <strong>${item.name}</strong><br>
+                    <span style="color:#27ae60; font-weight:bold; font-size:1.1em">${item.formattedPrice}</span>
+                </li>`;
+            });
+            htmlList += `</ul>`;
+
+            resultArea.querySelector('.result-big').textContent = "Çoklu Liste";
+            detailInfo.innerHTML = `Alan: ${realArea.toFixed(2)} m² <br><br> ${htmlList}`;
+            
+            // Kayıt
+            lastCalculation = {
+                isMulti: true, // Çoklu olduğunu belirtiyoruz
+                area: realArea.toFixed(2),
+                multiResults: multiResults, // Listeyi sakla
+                extraName: extraName,
+                extraPrice: extraPrice,
+                details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
+            };
+
+        } else {
+            // --- TEKİL ÜRÜN HESAPLAMA MODU (ESKİ SİSTEM) ---
+            let selectedData = JSON.parse(selectedValue);
+            
+            let pricingArea = realArea;
+            const productName = selectedData.name.toLowerCase();
+            let priceLabel = "Cam Balkon Sistem Bedeli";
+            let calculatedParcaSayisi = 1;
+
+            if (productName.includes("cam balkon")) {
+                let pricingHeight = h;
+                if (h < 180) {
+                    pricingHeight = 180;
+                    pricingArea = (totalWidth * pricingHeight) / 10000;
+                }
+                if (pricingArea < 5) pricingArea = 5;
+            }
+            else if (productName.includes("giyotin")) {
+                if (totalWidth > 800) {
+                    let pieceWidth = totalWidth / 3;
+                    let onePieceArea = (pieceWidth * h) / 10000;
+                    if (onePieceArea < 7) onePieceArea = 7;
+                    pricingArea = onePieceArea * 3;
+                    priceLabel = "3 Adet Giyotin Sistem";
+                    calculatedParcaSayisi = 3;
+                }
+                else if (totalWidth > 370) {
+                    let halfWidth = totalWidth / 2;
+                    let onePieceArea = (halfWidth * h) / 10000;
+                    if (onePieceArea < 7) onePieceArea = 7;
+                    pricingArea = onePieceArea * 2;
+                    priceLabel = "2 Adet Giyotin Sistem";
+                    calculatedParcaSayisi = 2;
+                }
+                else {
+                    if (pricingArea < 7) pricingArea = 7;
+                    priceLabel = "1 Adet Giyotin Sistem";
+                    calculatedParcaSayisi = 1;
+                }
+            }
+
+            const rawProductTotalTL = (pricingArea * selectedData.price) * rate;
+            const roundedProductTotalTL = smartRound(rawProductTotalTL);
+            const grandTotalTL = roundedProductTotalTL + extraPrice;
+            
+            const formattedProductPrice = fmtTL.format(roundedProductTotalTL);
+            const formattedExtraPrice = fmtTL.format(extraPrice);
+            const formattedGrandTotal = fmtTL.format(grandTotalTL);
+            const formattedArea = realArea.toFixed(2);
+
+            resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
+            detailInfo.innerHTML = `Alan: ${formattedArea} m² <br> Ürün: ${formattedProductPrice} + Ek: ${formattedExtraPrice}`;
+
+            let logProductName = selectedData.name;
+            if(extraName) logProductName += ` + ${extraName}`;
+            
+            addToReport(custName, channel, logProductName, formattedArea, formattedGrandTotal);
+
+            lastCalculation = {
+                isMulti: false, // Tekli
+                productName: selectedData.name,
+                productVideo: selectedData.video || "",
+                area: formattedArea,
+                priceLabel: priceLabel,
+                productPriceStr: formattedProductPrice,
+                extraName: extraName,
+                extraPrice: extraPrice,
+                extraPriceStr: formattedExtraPrice,
+                grandTotalStr: formattedGrandTotal,
+                totalWidthCm: totalWidth,
+                heightCm: h,
+                parcaSayisi: calculatedParcaSayisi,
+                details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
+            };
+        }
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
-        if(shareVideoBtn) shareVideoBtn.style.display = 'block';
-
-        let logProductName = selectedData.name;
-        if(extraName) logProductName += ` + ${extraName}`;
-        
-        addToReport(custName, channel, logProductName, formattedArea, formattedGrandTotal);
-
-        lastCalculation = {
-            productName: selectedData.name,
-            productVideo: selectedData.video || "",
-            area: formattedArea,
-            priceLabel: priceLabel,
-            productPriceStr: formattedProductPrice,
-            extraName: extraName,
-            extraPrice: extraPrice,
-            extraPriceStr: formattedExtraPrice,
-            grandTotalStr: formattedGrandTotal,
-            totalWidthCm: totalWidth,
-            heightCm: h,
-            parcaSayisi: calculatedParcaSayisi,
-            details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
-        };
+        // Çoklu seçimde video butonu anlamsız olduğu için gizle, teklide göster
+        if(shareVideoBtn) shareVideoBtn.style.display = (selectedValue === "MULTI_CALCULATION") ? 'none' : 'block';
     });
 
     if(shareVideoBtn) {
         shareVideoBtn.addEventListener('click', async () => {
-            if (!lastCalculation || !lastCalculation.productVideo) {
+            if (!lastCalculation || lastCalculation.isMulti || !lastCalculation.productVideo) {
                 alert("Video linki yok.");
                 return;
             }
@@ -346,18 +434,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- GELİŞMİŞ TEKNİK ÇİZİM FONKSİYONU ---
+    // --- TEKNİK ÇİZİM FONKSİYONU (SADECE TEKLİ SEÇİM İÇİN) ---
     function drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, data) {
         const pName = data.productName.toLowerCase();
         const totalW = data.totalWidthCm;
         const totalH = data.heightCm;
         const parca = data.parcaSayisi;
-
         const profileColor = '#2c3e50';
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
         
-        // Padding biraz azaltıldı
         const padding = 50; 
         const drawX = boxX + padding;
         const drawY = boxY + padding;
@@ -375,10 +461,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
             ctx.stroke();
-
             ctx.beginPath(); ctx.arc(x1, y1, 3, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.arc(x2, y2, 3, 0, Math.PI*2); ctx.fill();
-
             ctx.font = 'bold 20px Arial';
             ctx.textAlign = 'center';
             if (vertical) {
@@ -398,51 +482,38 @@ document.addEventListener('DOMContentLoaded', function() {
         if (pName.includes("giyotin")) {
             const pieceWidth = drawW / parca;
             const profileThick = 6;
-
             for (let i = 0; i < parca; i++) {
                 const currentX = drawX + (i * pieceWidth);
-                
                 ctx.fillStyle = glassColor;
                 ctx.fillRect(currentX, drawY, pieceWidth, drawH);
-
                 ctx.fillStyle = profileColor;
                 ctx.fillRect(currentX, drawY, profileThick, drawH);
                 ctx.fillRect(currentX + pieceWidth - profileThick, drawY, profileThick, drawH);
                 ctx.fillRect(currentX, drawY, pieceWidth, 40); 
-
                 const panelH = (drawH - 40) / 3;
-                
                 ctx.fillRect(currentX, drawY + 40 + panelH, pieceWidth, profileThick);
                 ctx.fillRect(currentX, drawY + 40 + (panelH * 2), pieceWidth, profileThick);
-
                 ctx.fillRect(currentX, drawY + drawH - 20, pieceWidth, 20);
-
                 ctx.fillStyle = '#7f8c8d';
                 ctx.font = '16px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText("Sistem " + (i+1), currentX + (pieceWidth/2), drawY + drawH/2);
             }
-
         } else {
             let panelCount = Math.ceil(totalW / 65);
             if (panelCount < 2) panelCount = 2;
             const panelWidth = drawW / panelCount;
             const profileThick = 4;
-
             ctx.fillStyle = profileColor;
             ctx.fillRect(drawX, drawY, drawW, 20);
             ctx.fillRect(drawX, drawY + drawH - 20, drawW, 20);
-
             for (let i = 0; i < panelCount; i++) {
                 const currentX = drawX + (i * panelWidth);
-                
                 ctx.fillStyle = glassColor;
                 ctx.fillRect(currentX + profileThick, drawY + 20, panelWidth - (profileThick*2), drawH - 40);
-
                 ctx.fillStyle = '#bdc3c7';
                 ctx.fillRect(currentX, drawY + 20, profileThick, drawH - 40);
                 ctx.fillRect(currentX + panelWidth - profileThick, drawY + 20, profileThick, drawH - 40);
-
                 if (i === 0) {
                     ctx.fillStyle = '#000000';
                     ctx.fillRect(currentX + panelWidth - 15, drawY + (drawH/2) - 20, 10, 40);
@@ -451,7 +522,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     ctx.fill();
                 }
             }
-            
             ctx.fillStyle = profileColor;
             ctx.fillRect(drawX, drawY, 10, drawH);
             ctx.fillRect(drawX + drawW - 10, drawY, 10, drawH);
@@ -460,13 +530,11 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#333';
         ctx.font = 'bold 24px Segoe UI, Arial';
         ctx.textAlign = 'center';
-        // TEKNİK GÖRÜNÜŞ YAZISI
-        // Kutu yüksekliği azaldığı için bu yazı da yukarı çıktı
         let schemaLabel = `TEKNİK GÖRÜNÜŞ`;
         ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 35);
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU (BOŞLUKLAR VE KUTU BOYUTU OPTİMİZE EDİLDİ) ---
+    // --- A4 GÖRSEL OLUŞTURUCU (GÜNCELLENDİ: TEKLİ/ÇOKLU DESTEĞİ) ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -480,116 +548,160 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // Tarih
+        // Header
         ctx.textAlign = 'right';
         ctx.fillStyle = '#888888';
         ctx.font = '24px Segoe UI, Arial';
         const today = new Date().toLocaleDateString('tr-TR');
         ctx.fillText(today, width - 40, 50);
 
-        // Logo
         ctx.textAlign = 'center';
         const logoWidth = 500;
         const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
         const logoX = (width - logoWidth) / 2;
         ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
 
-        // --- AKIŞ BAŞLANGICI ---
-        // Logodan sonraki boşluğu azalttım (80 -> 40)
         let currentY = 60 + logoHeight + 40; 
 
-        // 2. Ürün Adı
-        ctx.fillStyle = '#333330';
-        const fontSize = 40;
-        ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
+        // --- ŞUBELENDİRME: ÇOKLU vs TEKLİ ---
         
-        let productName = lastCalculation.productName;
-        if (lastCalculation.extraName) {
-            productName += ` + ${lastCalculation.extraName}`;
-        }
+        if (lastCalculation.isMulti) {
+            // ************ ÇOKLU ÜRÜN FORMATI ************
+            
+            // Başlık
+            ctx.fillStyle = '#333330';
+            ctx.font = 'bold 50px Segoe UI, Arial';
+            ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, currentY);
+            currentY += 60;
+            
+            ctx.font = '30px Segoe UI, Arial';
+            ctx.fillStyle = '#666';
+            ctx.fillText(`Ölçüler: ${lastCalculation.details} | Toplam Alan: ${lastCalculation.area} m²`, width / 2, currentY);
+            currentY += 80;
 
-        const maxWidth = 950;
-        const lineHeight = 50;
-        const words = productName.split(' ');
-        let line = '';
-        
-        for(let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, width / 2, currentY);
-                line = words[n] + ' ';
-                currentY += lineHeight;
+            // Ayırıcı
+            ctx.beginPath();
+            ctx.moveTo(100, currentY);
+            ctx.lineTo(980, currentY);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            currentY += 60;
+
+            // Liste Elemanları (Ortalı ve Düzenli)
+            let products = lastCalculation.multiResults;
+            
+            products.forEach(item => {
+                // Ürün Adı
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = 'bold 36px Segoe UI, Arial';
+                ctx.fillText(item.name, width / 2, currentY);
+                
+                currentY += 50;
+
+                // Fiyat
+                ctx.fillStyle = '#27ae60'; // Yeşil Fiyat
+                ctx.font = 'bold 44px Segoe UI, Arial';
+                ctx.fillText(item.formattedPrice, width / 2, currentY);
+
+                currentY += 40;
+
+                // İnce çizgi
+                ctx.beginPath();
+                ctx.moveTo(300, currentY);
+                ctx.lineTo(780, currentY);
+                ctx.strokeStyle = '#eee';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                currentY += 60; // Sonraki ürün için boşluk
+            });
+
+            // Ek Malzeme Varsa En Alta Not Düş
+            if(lastCalculation.extraPrice > 0) {
+                currentY += 20;
+                ctx.fillStyle = '#e67e22';
+                ctx.font = 'italic 30px Segoe UI, Arial';
+                ctx.fillText(`Not: Fiyatlara "${lastCalculation.extraName}" bedeli dahildir.`, width / 2, currentY);
+            }
+
+        } else {
+            // ************ TEKİL ÜRÜN FORMATI (STANDART) ************
+            
+            // Ürün Adı
+            ctx.fillStyle = '#333330';
+            ctx.font = 'bold 40px Segoe UI, Arial';
+            
+            let productName = lastCalculation.productName;
+            if (lastCalculation.extraName) {
+                productName += ` + ${lastCalculation.extraName}`;
+            }
+
+            const maxWidth = 950;
+            const lineHeight = 50;
+            const words = productName.split(' ');
+            let line = '';
+            
+            for(let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                    ctx.fillText(line, width / 2, currentY);
+                    line = words[n] + ' ';
+                    currentY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            ctx.fillText(line, width / 2, currentY);
+            currentY += 50; 
+
+            // Teknik Çizim
+            const boxWidth = 900;
+            const boxHeight = 450; 
+            const boxX = (width - boxWidth) / 2;
+            const boxY = currentY; 
+            drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, lastCalculation);
+            currentY += boxHeight + 60;
+
+            // Detaylar ve Fiyat
+            let detailsY = currentY;
+            ctx.beginPath();
+            ctx.moveTo(200, detailsY);
+            ctx.lineTo(880, detailsY);
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            detailsY += 40; 
+
+            ctx.fillStyle = '#666666';
+            ctx.font = '40px Segoe UI, Arial';
+            ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
+            detailsY += 50; 
+
+            if (lastCalculation.extraPrice > 0) {
+                ctx.font = 'bold 35px Segoe UI, Arial';
+                ctx.fillStyle = '#555555';
+                ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
+                detailsY += 50;
+                ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
+                detailsY += 80;
+                ctx.fillStyle = '#28a745';
+                ctx.font = 'bold 100px Segoe UI, Arial';
+                ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
             } else {
-                line = testLine;
+                detailsY += 20;
+                ctx.font = 'bold 35px Segoe UI, Arial';
+                ctx.fillStyle = '#555555';
+                ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
+                detailsY += 100;
+                ctx.fillStyle = '#28a745';
+                ctx.font = 'bold 100px Segoe UI, Arial';
+                ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
             }
         }
-        ctx.fillText(line, width / 2, currentY);
-        
-        // Ürün adından sonraki boşluğu azalttım (100 -> 50)
-        currentY += 50; 
 
-        // 3. Teknik Çizim Alanı
-        // DİKKAT: Kutu yüksekliğini 600'den 450'ye düşürdüm.
-        // Bu hamle 150px yer kazandırdı.
-        const boxWidth = 900;
-        const boxHeight = 450; 
-        const boxX = (width - boxWidth) / 2;
-        const boxY = currentY; 
-
-        drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, lastCalculation);
-        
-        // Kutudan sonraki boşluğu azalttım (100 -> 40)
-        // Kutu yüksekliği de azaldığı için toplamda ciddi yer açıldı.
-        currentY += boxHeight + 60; // 450 (kutu) + 60 (yazı payı ve boşluk)
-
-        // 4. Detaylar ve Fiyat
-        let detailsY = currentY;
-
-        // Ayırıcı Çizgi
-        ctx.beginPath();
-        ctx.moveTo(200, detailsY);
-        ctx.lineTo(880, detailsY);
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.lineWidth = 5;
-        ctx.stroke();
-
-        detailsY += 40; // Çizgiden sonra boşluk (azaltıldı)
-
-        // Toplam Alan
-        ctx.fillStyle = '#666666';
-        ctx.font = '40px Segoe UI, Arial';
-        ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
-        
-        detailsY += 50; // Alan bilgisinden sonra boşluk
-
-        // Fiyat Gösterimi
-        if (lastCalculation.extraPrice > 0) {
-            ctx.font = 'bold 35px Segoe UI, Arial';
-            ctx.fillStyle = '#555555';
-            ctx.fillText(`${lastCalculation.priceLabel}: ${lastCalculation.productPriceStr}`, width / 2, detailsY);
-            
-            detailsY += 50; // Satır arası sıkılaştırıldı
-            ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
-            
-            detailsY += 80; // Toplam öncesi boşluk
-            ctx.fillStyle = '#28a745';
-            ctx.font = 'bold 100px Segoe UI, Arial';
-            ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
-        } else {
-            // Ek malzeme yoksa
-            detailsY += 20;
-            ctx.font = 'bold 35px Segoe UI, Arial';
-            ctx.fillStyle = '#555555';
-            ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
-
-            detailsY += 100; // Toplam öncesi boşluk (biraz daha yukarı çekildi)
-            ctx.fillStyle = '#28a745';
-            ctx.font = 'bold 100px Segoe UI, Arial'; // Font 120'den 100'e çekildi (daha zarif)
-            ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
-        }
-
-        // 5. Footer (Sabit)
+        // Footer (Ortak)
         const footerHeight = 200;
         const footerY = height - footerHeight;
         
@@ -610,8 +722,16 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
             if(!canvas) return;
+            // Dosya adı dinamik olsun
+            let fileName = "Teklif.jpg";
+            if(lastCalculation.isMulti) {
+                fileName = "Fiyat_Listesi.jpg";
+            } else {
+                fileName = `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
+            }
+            
             const link = document.createElement('a');
-            link.download = `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
+            link.download = fileName;
             link.href = canvas.toDataURL('image/jpeg', 0.9);
             link.click();
         });
@@ -628,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         await navigator.share({
                             files: [file],
                             title: 'Fiyat Teklifi',
-                            text: `${lastCalculation.productName} Fiyat Teklifi`
+                            text: 'Detaylı fiyat teklifi ektedir.'
                         });
                     } catch (error) { console.log('Hata', error); }
                 } else {
