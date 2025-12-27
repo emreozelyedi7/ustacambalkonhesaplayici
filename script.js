@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAndLoadDefaults();
     loadRate();
     
-    // Video butonu başlangıçta görünür olsun (Revize 1)
+    // Video butonu her zaman görünür (İstek 1)
     if(shareVideoBtn) shareVideoBtn.style.display = 'block';
 
     addWidthBtn.addEventListener('click', () => {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             detailInfo.innerHTML = '';
             downloadBtn.style.display = 'none';
             shareBtn.style.display = 'none';
-            // shareVideoBtn.style.display = 'none'; // ARTIK GİZLEMİYORUZ (Revize 1)
+            // Video butonu artık gizlenmiyor
             lastCalculation = null;
         }
     });
@@ -125,9 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
-    // --- YENİ FİYAT YUVARLAMA MANTIĞI (Revize 3) ---
-    // 0-500 arası -> 450
-    // 501-999 arası -> 850
+    // --- FİYAT YUVARLAMA (450 / 850 Kuralı) ---
     function smartRound(amount) {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
@@ -264,6 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let realArea = (totalWidth * h) / 10000;
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
+        // Raporlama için değişkenler
+        let reportProductName = "";
+        let reportPrice = "";
+
         if (selectedValue === "MULTI_CALCULATION") {
             // --- ÇOKLU HESAPLAMA ---
             let allProducts = JSON.parse(localStorage.getItem('myProductsV4')) || defaultProductsData;
@@ -328,6 +330,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
             };
 
+            // RAPORLAMA İÇİN ÖZEL METİN (İstek 3)
+            reportProductName = "Cam Balkon (8mm, Isıcam, Jaluzi) & Giyotin";
+            if(extraName) reportProductName += ` + ${extraName}`;
+            reportPrice = "Fiyat Listesi";
+
         } else {
             // --- TEKİL HESAPLAMA ---
             let selectedData = JSON.parse(selectedValue);
@@ -381,11 +388,6 @@ document.addEventListener('DOMContentLoaded', function() {
             resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
             detailInfo.innerHTML = `Alan: ${formattedArea} m² <br> Ürün: ${formattedProductPrice} + Ek: ${formattedExtraPrice}`;
 
-            let logProductName = selectedData.name;
-            if(extraName) logProductName += ` + ${extraName}`;
-            
-            addToReport(custName, channel, logProductName, formattedArea, formattedGrandTotal);
-
             lastCalculation = {
                 isMulti: false,
                 productName: selectedData.name,
@@ -402,7 +404,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 parcaSayisi: calculatedParcaSayisi,
                 details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
             };
+
+            // Raporlama verileri (Tekil)
+            reportProductName = selectedData.name;
+            if(extraName) reportProductName += ` + ${extraName}`;
+            reportPrice = formattedGrandTotal;
         }
+
+        // RAPORA EKLE (Artık hem tekli hem çoklu için çalışır)
+        const formattedAreaReport = realArea.toFixed(2);
+        addToReport(custName, channel, reportProductName, formattedAreaReport, reportPrice);
 
         if(downloadBtn) downloadBtn.style.display = 'block';
         if(shareBtn) shareBtn.style.display = 'block';
@@ -410,16 +421,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if(shareVideoBtn) {
         shareVideoBtn.addEventListener('click', async () => {
-            // VİDEO PAYLAŞIM MANTIĞI (Revize 1: Hesaplama yapılmamışsa seçili ürüne bak)
+            // VİDEO PAYLAŞIM
             let videoUrl = "";
             let pName = "";
 
-            // Durum 1: Zaten hesaplama yapıldı ve tekli ürün (En öncelikli)
             if (lastCalculation && !lastCalculation.isMulti && lastCalculation.productVideo) {
                 videoUrl = lastCalculation.productVideo;
                 pName = lastCalculation.productName;
             }
-            // Durum 2: Hesaplama yapılmadı ama listeden ürün seçili
             else {
                 const selectedVal = productSelect.value;
                 if(selectedVal && selectedVal !== "MULTI_CALCULATION") {
@@ -576,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentY = 60 + logoHeight + 40; 
         
         if (lastCalculation.isMulti) {
-            // ************ ÇOKLU ÜRÜN LİSTESİ (REVİZE 2: SATIR KAYDIRMA) ************
+            // ************ ÇOKLU ÜRÜN LİSTESİ (SATIR KAYDIRMALI) ************
             
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 50px Segoe UI, Arial';
@@ -599,11 +608,11 @@ document.addEventListener('DOMContentLoaded', function() {
             let products = lastCalculation.multiResults;
             
             products.forEach(item => {
-                // Ürün Adı (Satır Kaydırmalı)
+                // Ürün Adı (Uzunsa aşağı kayar)
                 ctx.fillStyle = '#2c3e50';
                 ctx.font = 'bold 36px Segoe UI, Arial';
                 
-                const maxWidthMulti = 900; // Kenarlardan taşmaması için
+                const maxWidthMulti = 900; 
                 const words = item.name.split(' ');
                 let line = '';
                 
@@ -613,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (metrics.width > maxWidthMulti && n > 0) {
                         ctx.fillText(line, width / 2, currentY);
                         line = words[n] + ' ';
-                        currentY += 45; // Satır yüksekliği
+                        currentY += 45; 
                     } else {
                         line = testLine;
                     }
