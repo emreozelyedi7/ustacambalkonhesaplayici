@@ -1,31 +1,34 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V21 - FİYAT GÜNCELLEMESİ & YENİ KATEGORİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V21 - FİYATLAR GÜNCEL) ---
 const defaultProductsData = {
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 150, // Güncellendi (Eski: 140)
+        price: 150, // 150$
         img: "1", 
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 175, // Güncellendi (Eski: 165)
+        price: 175, // 175$
         img: "2",
         video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 220, // Güncellendi (Eski: 200)
+        price: 220, // 220$
         img: "4",
         video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Temizlenebilir Giyotin": {
-        price: 250, // Güncellendi (Eski: 240)
+        price: 250, // 250$
         img: "3",
         video: "https://www.instagram.com/reel/DSFKfGxCAWg/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
-        price: 175, // Güncellendi (Eski: 165)
+        price: 175, // 175$
         img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     }
 };
+
+// SÜRÜM KONTROLÜ İÇİN ANAHTAR İSMİNİ DEĞİŞTİRDİK: myProductsV5
+const STORAGE_KEY = 'myProductsV5'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     // ELEMENTLER
@@ -137,15 +140,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function checkAndLoadDefaults() {
-        if (!localStorage.getItem('myProductsV4')) {
-            localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
+        // Eğer V5 anahtarı yoksa (yani ilk defa yükleniyorsa veya sürüm güncellendiyse)
+        // Yeni fiyatları yükle
+        if (!localStorage.getItem(STORAGE_KEY)) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProductsData));
         }
         loadProducts();
     }
 
     window.resetDefaultProducts = function() {
-        if(confirm("Tüm listeniz silinecek. Onaylıyor musunuz?")) {
-            localStorage.setItem('myProductsV4', JSON.stringify(defaultProductsData));
+        if(confirm("Tüm listeniz silinecek ve varsayılan yeni fiyatlar yüklenecek. Onaylıyor musunuz?")) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProductsData));
             loadProducts();
             alert("Varsayılan ürünler yüklendi!");
         }
@@ -159,9 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
 
-        let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
+        let products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
         products[name] = { price: price, img: imgName, video: videoLink };
-        localStorage.setItem('myProductsV4', JSON.stringify(products));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 
         alert(`${name} kaydedildi!`);
         newProductName.value = ''; newProductImage.value = ''; newProductVideo.value = ''; newProductPrice.value = '';
@@ -169,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadProducts() {
-        let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
+        let products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
         productSelect.innerHTML = '<option value="">Seçiniz...</option>';
         deleteSelect.innerHTML = '<option value="">Seçiniz...</option>';
         
@@ -190,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
         glassOption.value = "GLASS_BALCONY_VARIANTS";
         glassOption.textContent = "✨ CAM BALKON ÇEŞİTLERİ (Karşılaştırmalı) ✨";
         glassOption.style.fontWeight = "bold";
-        glassOption.style.color = "#2980b9"; // Mavi tonu
+        glassOption.style.color = "#2980b9"; 
         productSelect.appendChild(glassOption);
 
         // 2. Seçenek: TÜM SİSTEMLER
@@ -198,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
         multiOption.value = "MULTI_CALCULATION";
         multiOption.textContent = "🚀 TÜM SİSTEMLER (Giyotin Dahil Liste) 🚀";
         multiOption.style.fontWeight = "bold";
-        multiOption.style.color = "#d35400"; // Turuncu tonu
+        multiOption.style.color = "#d35400"; 
         productSelect.appendChild(multiOption);
     }
 
@@ -320,10 +325,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // SENARYO 1: CAM BALKON ÇEŞİTLERİ (8mm, Isı, Jaluzi)
         // ===============================================
         if (selectedValue === "GLASS_BALCONY_VARIANTS") {
-            let allProducts = JSON.parse(localStorage.getItem('myProductsV4')) || defaultProductsData;
+            let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
             let multiResults = [];
 
-            // Sadece bu 3 ürünü filtrele
             const targetProducts = [
                 "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon",
                 "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon",
@@ -354,7 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Listeyi Oluştur
             let htmlList = `<ul style="list-style:none; padding:0;">`;
             multiResults.forEach(item => {
                 htmlList += `<li style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
@@ -381,24 +384,22 @@ document.addEventListener('DOMContentLoaded', function() {
             reportPrice = "Fiyat Listesi";
         }
         // ===============================================
-        // SENARYO 2: TÜM SİSTEMLER (Giyotin Dahil)
+        // SENARYO 2: TÜM SİSTEMLER
         // ===============================================
         else if (selectedValue === "MULTI_CALCULATION") {
-            let allProducts = JSON.parse(localStorage.getItem('myProductsV4')) || defaultProductsData;
+            let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
             let multiResults = [];
 
             for (let [pName, pData] of Object.entries(allProducts)) {
-                if (pName.toLowerCase().includes("sürme")) continue; // Sürme Hariç
+                if (pName.toLowerCase().includes("sürme")) continue; 
 
                 let pricingArea = 0;
                 
-                // Giyotin ise Kenar Bazlı
                 if (pName.toLowerCase().includes("giyotin")) {
                     let gResult = calculateGuillotineLogic(widthList, h);
                     pricingArea = gResult.pricingArea;
                 } 
                 else if (pName.toLowerCase().includes("cam balkon")) {
-                    // Katlanır
                     let pricingHeight = h;
                     if (h < 180) {
                         pricingHeight = 180;
@@ -475,7 +476,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 calculatedParcaSayisi = Math.ceil(totalWidth / 65);
                 priceLabel = "Cam Balkon Sistem Bedeli";
             } else if (productName.includes("sürme")) {
-                 // Sürme için de katlanır mantığı (şimdilik)
                 let pricingHeight = h;
                 if (h < 180) {
                      pricingHeight = 180;
@@ -692,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentY = 60 + logoHeight + 40; 
         
         if (lastCalculation.isMulti) {
-            // --- ÇOKLU LİSTE FORMATI ---
+            // --- ÇOKLU LİSTE (SATIR KAYDIRMALI) ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 50px Segoe UI, Arial';
             ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, currentY);
@@ -757,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
         } else {
-            // --- TEKİL ÜRÜN FORMATI ---
+            // --- TEKİL ÜRÜN ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 40px Segoe UI, Arial';
             
@@ -887,9 +887,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const nameToDelete = deleteSelect.value;
         if (!nameToDelete) return;
         if(confirm(`${nameToDelete} silinsin mi?`)) {
-            let products = JSON.parse(localStorage.getItem('myProductsV4')) || {};
+            let products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
             delete products[nameToDelete];
-            localStorage.setItem('myProductsV4', JSON.stringify(products));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
             loadProducts();
         }
     });
