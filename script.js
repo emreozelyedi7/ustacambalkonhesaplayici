@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V22 - GİYOTİN VİDEO GÜNCEL) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V23 - PNG FORMATI VE VİDEO GÜNCELLEMESİ) ---
 const defaultProductsData = {
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
         price: 150, 
@@ -18,7 +18,6 @@ const defaultProductsData = {
     "Isıcamlı Temizlenebilir Giyotin": {
         price: 250, 
         img: "3",
-        // YENİ VİDEO LİNKİ:
         video: "https://www.instagram.com/reel/Ch1eC1wjgeL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
@@ -28,7 +27,6 @@ const defaultProductsData = {
     }
 };
 
-// SÜRÜM GÜNCELLENDİ: myProductsV6 (Yeni video için zorunlu)
 const STORAGE_KEY = 'myProductsV6'; 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -320,7 +318,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let reportProductName = "";
         let reportPrice = "";
 
-        // SENARYO 1: CAM BALKON ÇEŞİTLERİ (3 ÜRÜN)
+        // ===============================================
+        // SENARYO 1: CAM BALKON ÇEŞİTLERİ (8mm, Isı, Jaluzi)
+        // ===============================================
         if (selectedValue === "GLASS_BALCONY_VARIANTS") {
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
             let multiResults = [];
@@ -379,7 +379,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if(extraName) reportProductName += ` + ${extraName}`;
             reportPrice = "Fiyat Listesi";
         }
+        // ===============================================
         // SENARYO 2: TÜM SİSTEMLER
+        // ===============================================
         else if (selectedValue === "MULTI_CALCULATION") {
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
             let multiResults = [];
@@ -440,7 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
             reportPrice = "Fiyat Listesi";
 
         } 
+        // ===============================================
         // SENARYO 3: TEKİL ÜRÜN
+        // ===============================================
         else {
             let selectedData = JSON.parse(selectedValue);
             
@@ -523,22 +527,32 @@ document.addEventListener('DOMContentLoaded', function() {
         shareVideoBtn.addEventListener('click', async () => {
             let videoUrl = "";
             let pName = "";
+            
+            const selectedVal = productSelect.value;
+            let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
 
-            if (lastCalculation && !lastCalculation.isMulti && lastCalculation.productVideo) {
+            // EĞER "CAM BALKON ÇEŞİTLERİ" SEÇİLİYSE 8mm VİDEOSUNU AT
+            if (selectedVal === "GLASS_BALCONY_VARIANTS") {
+                 let data8mm = allProducts["Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon"];
+                 if(data8mm) {
+                     videoUrl = data8mm.video;
+                     pName = "Cam Balkon Örnek Tanıtımı";
+                 }
+            }
+            // HESAPLAMA YAPILDIYSA VE TEKLİ İSE
+            else if (lastCalculation && !lastCalculation.isMulti && lastCalculation.productVideo) {
                 videoUrl = lastCalculation.productVideo;
                 pName = lastCalculation.productName;
             }
-            else {
-                const selectedVal = productSelect.value;
-                if(selectedVal && selectedVal !== "MULTI_CALCULATION" && selectedVal !== "GLASS_BALCONY_VARIANTS") {
-                     const data = JSON.parse(selectedVal);
-                     videoUrl = data.video;
-                     pName = data.name;
-                }
+            // HESAPLAMA YAPILMADIYSA VE LİSTEDEN SEÇİLEN TEK BİR ÜRÜNSE
+            else if (selectedVal && selectedVal !== "MULTI_CALCULATION") {
+                 const data = JSON.parse(selectedVal);
+                 videoUrl = data.video;
+                 pName = data.name;
             }
 
             if (!videoUrl) {
-                 alert("Video paylaşmak için lütfen listeden tekil bir ürün seçiniz.");
+                 alert("Video paylaşmak için lütfen listeden ürün veya 'Cam Balkon Çeşitleri'ni seçiniz.");
                  return;
             }
 
@@ -856,8 +870,10 @@ document.addEventListener('DOMContentLoaded', function() {
         shareBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
             if(!canvas) return;
+            
+            // PAYLAŞIM FORMATI PNG'YE ÇEVRİLDİ (Kopyala/Yapıştır hatasını çözmek için)
             canvas.toBlob(async (blob) => {
-                const file = new File([blob], `Teklif.jpg`, { type: 'image/jpeg' });
+                const file = new File([blob], `Teklif.png`, { type: 'image/png' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
                         await navigator.share({
@@ -869,7 +885,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     alert("Tarayıcı desteklemiyor. 'İndir' butonunu kullanın.");
                 }
-            }, 'image/jpeg', 0.9);
+            }, 'image/png', 1.0);
         });
     }
 
