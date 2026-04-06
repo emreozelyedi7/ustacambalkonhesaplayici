@@ -1,33 +1,34 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V23 - PNG FORMATI VE VİDEO GÜNCELLEMESİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V24 - YENİ FİYATLAR & GİZLİ EK MALZEME) ---
 const defaultProductsData = {
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 150, 
+        price: 165, 
         img: "1", 
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 175, 
+        price: 200, 
         img: "2",
         video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 220, 
+        price: 250, 
         img: "4",
         video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Temizlenebilir Giyotin": {
-        price: 250, 
+        price: 275, 
         img: "3",
         video: "https://www.instagram.com/reel/Ch1eC1wjgeL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
-        price: 175, 
+        price: 200, 
         img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     }
 };
 
-const STORAGE_KEY = 'myProductsV6'; 
+// SÜRÜM GÜNCELLENDİ: myProductsV7 (Yeni fiyatlar için zorunlu)
+const STORAGE_KEY = 'myProductsV7'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     // ELEMENTLER
@@ -492,6 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedArea = realArea.toFixed(2);
 
             resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
+            // Ekranda sen detayları gör diye tutuyoruz (müşteriye giden teklifte görünmeyecek)
             detailInfo.innerHTML = `Alan: ${formattedArea} m² <br> Ürün: ${formattedProductPrice} + Ek: ${formattedExtraPrice}`;
 
             lastCalculation = {
@@ -531,7 +533,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedVal = productSelect.value;
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
 
-            // EĞER "CAM BALKON ÇEŞİTLERİ" SEÇİLİYSE 8mm VİDEOSUNU AT
             if (selectedVal === "GLASS_BALCONY_VARIANTS") {
                  let data8mm = allProducts["Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon"];
                  if(data8mm) {
@@ -539,12 +540,10 @@ document.addEventListener('DOMContentLoaded', function() {
                      pName = "Cam Balkon Örnek Tanıtımı";
                  }
             }
-            // HESAPLAMA YAPILDIYSA VE TEKLİ İSE
             else if (lastCalculation && !lastCalculation.isMulti && lastCalculation.productVideo) {
                 videoUrl = lastCalculation.productVideo;
                 pName = lastCalculation.productName;
             }
-            // HESAPLAMA YAPILMADIYSA VE LİSTEDEN SEÇİLEN TEK BİR ÜRÜNSE
             else if (selectedVal && selectedVal !== "MULTI_CALCULATION") {
                  const data = JSON.parse(selectedVal);
                  videoUrl = data.video;
@@ -698,6 +697,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentY = 60 + logoHeight + 40; 
         
         if (lastCalculation.isMulti) {
+            // --- ÇOKLU LİSTE FORMATI ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 50px Segoe UI, Arial';
             ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, currentY);
@@ -762,13 +762,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
         } else {
+            // --- TEKİL ÜRÜN FORMATI ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 40px Segoe UI, Arial';
             
             let productName = lastCalculation.productName;
-            if (lastCalculation.extraName) {
-                productName += ` + ${lastCalculation.extraName}`;
-            }
 
             const maxWidth = 950;
             const lineHeight = 50;
@@ -810,21 +808,28 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
             detailsY += 50; 
 
+            // --- GİZLİ EK MALZEME MANTIĞI BURADA ---
             if (lastCalculation.extraPrice > 0) {
+                detailsY += 20;
                 ctx.font = 'bold 35px Segoe UI, Arial';
                 ctx.fillStyle = '#555555';
-                ctx.fillText(`${lastCalculation.priceLabel}`, width / 2, detailsY);
-                detailsY += 50;
-                ctx.fillText(`${lastCalculation.extraName}: ${lastCalculation.extraPriceStr}`, width / 2, detailsY);
-                detailsY += 80;
+                ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
+                
+                detailsY += 90; // Toplam tutar
                 ctx.fillStyle = '#28a745';
                 ctx.font = 'bold 100px Segoe UI, Arial';
-                ctx.fillText(`TOPLAM: ${lastCalculation.grandTotalStr}`, width / 2, detailsY);
+                ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
+                
+                detailsY += 50; // Bilgilendirme Notu
+                ctx.fillStyle = '#e67e22';
+                ctx.font = 'italic 30px Segoe UI, Arial';
+                ctx.fillText(`Not: Fiyatlara "${lastCalculation.extraName}" bedeli dahildir.`, width / 2, detailsY);
             } else {
                 detailsY += 20;
                 ctx.font = 'bold 35px Segoe UI, Arial';
                 ctx.fillStyle = '#555555';
                 ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
+                
                 detailsY += 100;
                 ctx.fillStyle = '#28a745';
                 ctx.font = 'bold 100px Segoe UI, Arial';
@@ -871,7 +876,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const canvas = await createCanvasImage();
             if(!canvas) return;
             
-            // PAYLAŞIM FORMATI PNG'YE ÇEVRİLDİ (Kopyala/Yapıştır hatasını çözmek için)
             canvas.toBlob(async (blob) => {
                 const file = new File([blob], `Teklif.png`, { type: 'image/png' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
