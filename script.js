@@ -1,34 +1,34 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V24 - YENİ FİYATLAR & GİZLİ EK MALZEME) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V25 - YENİ FİYATLAR V8) ---
 const defaultProductsData = {
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 165, 
+        price: 185, // Güncellendi (Eski: 165)
         img: "1", 
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 200, 
+        price: 210, // Güncellendi (Eski: 200)
         img: "2",
         video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        price: 250, 
+        price: 265, // Güncellendi (Eski: 250)
         img: "4",
         video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Temizlenebilir Giyotin": {
-        price: 275, 
+        price: 290, // Güncellendi (Eski: 275)
         img: "3",
         video: "https://www.instagram.com/reel/Ch1eC1wjgeL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
-        price: 200, 
+        price: 210, // Güncellendi (Eski: 200)
         img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     }
 };
 
-// SÜRÜM GÜNCELLENDİ: myProductsV7 (Yeni fiyatlar için zorunlu)
-const STORAGE_KEY = 'myProductsV7'; 
+// SÜRÜM GÜNCELLENDİ: myProductsV8 (Yeni fiyatlar için zorunlu)
+const STORAGE_KEY = 'myProductsV8'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     // ELEMENTLER
@@ -493,7 +493,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedArea = realArea.toFixed(2);
 
             resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
-            // Ekranda sen detayları gör diye tutuyoruz (müşteriye giden teklifte görünmeyecek)
             detailInfo.innerHTML = `Alan: ${formattedArea} m² <br> Ürün: ${formattedProductPrice} + Ek: ${formattedExtraPrice}`;
 
             lastCalculation = {
@@ -697,7 +696,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentY = 60 + logoHeight + 40; 
         
         if (lastCalculation.isMulti) {
-            // --- ÇOKLU LİSTE FORMATI ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 50px Segoe UI, Arial';
             ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, currentY);
@@ -762,7 +760,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
         } else {
-            // --- TEKİL ÜRÜN FORMATI ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 40px Segoe UI, Arial';
             
@@ -808,19 +805,18 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
             detailsY += 50; 
 
-            // --- GİZLİ EK MALZEME MANTIĞI BURADA ---
             if (lastCalculation.extraPrice > 0) {
                 detailsY += 20;
                 ctx.font = 'bold 35px Segoe UI, Arial';
                 ctx.fillStyle = '#555555';
                 ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
                 
-                detailsY += 90; // Toplam tutar
+                detailsY += 90; 
                 ctx.fillStyle = '#28a745';
                 ctx.font = 'bold 100px Segoe UI, Arial';
                 ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
                 
-                detailsY += 50; // Bilgilendirme Notu
+                detailsY += 50; 
                 ctx.fillStyle = '#e67e22';
                 ctx.font = 'italic 30px Segoe UI, Arial';
                 ctx.fillText(`Not: Fiyatlara "${lastCalculation.extraName}" bedeli dahildir.`, width / 2, detailsY);
