@@ -1,5 +1,12 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V26 - NAKİT VE KART FİYATLARI V9) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V28 - 8MM ÇITALI SİSTEM DOLAR BAZLI EKLENDİ V11) ---
 const defaultProductsData = {
+    // 1. SIRAYA EKLENEN YENİ ÜRÜN (DOLAR BAZLI):
+    "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
+        priceCard: 149, 
+        priceCash: 122.5,
+        img: "1",
+        video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
+    },
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
         priceCard: 185, priceCash: 165,
         img: "1", 
@@ -27,8 +34,8 @@ const defaultProductsData = {
     }
 };
 
-// SÜRÜM GÜNCELLENDİ: myProductsV9 (Çift fiyat sistemi için zorunlu)
-const STORAGE_KEY = 'myProductsV9'; 
+// SÜRÜM GÜNCELLENDİ: myProductsV11 (Yeni ürünün anında yüklenmesi için)
+const STORAGE_KEY = 'myProductsV11'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     // ELEMENTLER
@@ -42,12 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const salesChannelInput = document.getElementById('salesChannel');
     const productSelect = document.getElementById('productSelect');
     
-    // --- YENİ EKLENTİ: ÖDEME TİPİ SEÇİMİ (Otomatik Oluşturulur) ---
     let paymentTypeSelect = document.getElementById('paymentType');
     if (!paymentTypeSelect && productSelect) {
         paymentTypeSelect = document.createElement('select');
         paymentTypeSelect.id = 'paymentType';
-        paymentTypeSelect.className = productSelect.className; // Aynı stili alsın
+        paymentTypeSelect.className = productSelect.className;
         paymentTypeSelect.style.marginTop = '10px';
         paymentTypeSelect.style.fontWeight = 'bold';
         paymentTypeSelect.innerHTML = `
@@ -63,7 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const heightInput = document.getElementById('height');
     
-    // EK MALZEME INPUTLARI
     const extraItemNameInput = document.getElementById('extraItemName');
     const extraItemPriceInput = document.getElementById('extraItemPrice');
     
@@ -89,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let lastCalculation = null;
 
-    // --- BAŞLATMA ---
     checkAndLoadDefaults();
     loadRate();
     
@@ -141,7 +145,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedRate) currentRateInput.value = savedRate;
     }
 
-    // --- FİYAT YUVARLAMA (450 / 850 Kuralı) ---
     function smartRound(amount) {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
@@ -178,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
 
         let products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-        // Yeni ürün eklendiğinde tek fiyat girildiği için nakit ve kartı aynı sayıyoruz
         products[name] = { priceCard: price, priceCash: price, img: imgName, video: videoLink };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 
@@ -195,7 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let [name, data] of Object.entries(products)) {
             let option1 = document.createElement('option');
             option1.value = JSON.stringify({ ...data, name: name });
-            // Dropdown'da iki fiyatı da göster
             const pCard = data.priceCard || data.price;
             const pCash = data.priceCash || data.price;
             option1.textContent = `${name} (Kart: ${pCard}$ | Nakit: ${pCash}$)`;
@@ -207,7 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteSelect.appendChild(option2);
         }
 
-        // 1. Seçenek: CAM BALKON ÇEŞİTLERİ
         let glassOption = document.createElement('option');
         glassOption.value = "GLASS_BALCONY_VARIANTS";
         glassOption.textContent = "✨ CAM BALKON ÇEŞİTLERİ (Karşılaştırmalı) ✨";
@@ -215,7 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
         glassOption.style.color = "#2980b9"; 
         productSelect.appendChild(glassOption);
 
-        // 2. Seçenek: TÜM SİSTEMLER
         let multiOption = document.createElement('option');
         multiOption.value = "MULTI_CALCULATION";
         multiOption.textContent = "🚀 TÜM SİSTEMLER (Giyotin Dahil Liste) 🚀";
@@ -264,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- YARDIMCI: GİYOTİN HESAPLAMA (KENAR BAZLI) ---
     function calculateGuillotineLogic(widthList, height) {
         let totalPricingArea = 0;
         let totalPieces = 0;
@@ -304,11 +302,10 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // --- HESAPLAMA ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         const selectedValue = productSelect.value;
-        const paymentType = paymentTypeSelect ? paymentTypeSelect.value : 'card'; // NAKİT/KART SEÇİMİ
+        const paymentType = paymentTypeSelect ? paymentTypeSelect.value : 'card';
         const custName = customerNameInput.value.trim();
         const channel = salesChannelInput.value;
         const extraName = extraItemNameInput.value.trim();
@@ -339,14 +336,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let reportProductName = "";
         let reportPrice = "";
 
-        // ===============================================
-        // SENARYO 1: CAM BALKON ÇEŞİTLERİ (8mm, Isı, Jaluzi)
-        // ===============================================
         if (selectedValue === "GLASS_BALCONY_VARIANTS") {
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
             let multiResults = [];
 
             const targetProducts = [
+                "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon",
                 "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon",
                 "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon",
                 "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon"
@@ -364,9 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (pricingArea < 5) pricingArea = 5;
 
-                    // Aktif Fiyatı Seç (Nakit veya Kart)
                     let activePrice = (paymentType === 'cash') ? (pData.priceCash || pData.priceCard) : (pData.priceCard || pData.price);
-                    
                     let rawTotal = (pricingArea * activePrice) * rate;
                     let roundedTotal = smartRound(rawTotal) + extraPrice; 
 
@@ -400,13 +393,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 details: `(En: ${totalWidth}cm x Boy: ${h}cm)`
             };
 
-            reportProductName = "Cam Balkon Çeşitleri (8mm, Isıcam, Jaluzi)";
+            reportProductName = "Cam Balkon Çeşitleri";
             if(extraName) reportProductName += ` + ${extraName}`;
             reportPrice = paymentType === 'cash' ? "Fiyat Listesi (Nakit)" : "Fiyat Listesi (Kart)";
         }
-        // ===============================================
-        // SENARYO 2: TÜM SİSTEMLER
-        // ===============================================
         else if (selectedValue === "MULTI_CALCULATION") {
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
             let multiResults = [];
@@ -431,9 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (pricingArea < 5) pricingArea = 5;
                 }
 
-                // Aktif Fiyatı Seç (Nakit veya Kart)
                 let activePrice = (paymentType === 'cash') ? (pData.priceCash || pData.priceCard) : (pData.priceCard || pData.price);
-
                 let rawTotal = (pricingArea * activePrice) * rate;
                 let roundedTotal = smartRound(rawTotal) + extraPrice; 
 
@@ -471,9 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
             reportPrice = paymentType === 'cash' ? "Fiyat Listesi (Nakit)" : "Fiyat Listesi (Kart)";
 
         } 
-        // ===============================================
-        // SENARYO 3: TEKİL ÜRÜN
-        // ===============================================
         else {
             let selectedData = JSON.parse(selectedValue);
             
@@ -511,10 +496,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (pricingArea < 5) pricingArea = 5;
             }
 
-            // Aktif Fiyatı Seç (Nakit veya Kart)
             let activePrice = (paymentType === 'cash') ? (selectedData.priceCash || selectedData.priceCard) : (selectedData.priceCard || selectedData.price);
-
-            const rawProductTotalTL = (pricingArea * activePrice) * rate;
+            let rawProductTotalTL = (pricingArea * activePrice) * rate;
+            
             const roundedProductTotalTL = smartRound(rawProductTotalTL);
             const grandTotalTL = roundedProductTotalTL + extraPrice;
             
@@ -599,7 +583,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- TEKNİK ÇİZİM ---
     function drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, data) {
         const pName = data.productName.toLowerCase();
         const totalW = data.totalWidthCm;
@@ -699,7 +682,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 35);
     }
 
-    // --- A4 GÖRSEL OLUŞTURUCU ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
@@ -728,7 +710,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentY = 60 + logoHeight + 40; 
         
         if (lastCalculation.isMulti) {
-            // --- ÇOKLU LİSTE FORMATI ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 50px Segoe UI, Arial';
             ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, currentY);
@@ -793,7 +774,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
         } else {
-            // --- TEKİL ÜRÜN FORMATI ---
             ctx.fillStyle = '#333330';
             ctx.font = 'bold 40px Segoe UI, Arial';
             
@@ -860,7 +840,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ctx.fillStyle = '#555555';
                 ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
                 
-                detailsY += 100;
+                detailsY += 100; 
                 ctx.fillStyle = '#28a745';
                 ctx.font = 'bold 100px Segoe UI, Arial';
                 ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
@@ -878,7 +858,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80);
 
         ctx.font = 'bold 34px Segoe UI, Arial';
-        // ÖDEME TİPİNE GÖRE FOOTER YAZISI DEĞİŞİR
         if (lastCalculation.paymentType === 'cash') {
             ctx.fillText("Bu teklif NAKİT ödemelere özel olarak hazırlanmıştır", width / 2, footerY + 140);
         } else {
