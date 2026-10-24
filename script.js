@@ -1,6 +1,5 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V28 - 8MM ÇITALI SİSTEM DOLAR BAZLI EKLENDİ V11) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V29 - ÖZEL ŞABLON ENTEGRASYONU) ---
 const defaultProductsData = {
-    // 1. SIRAYA EKLENEN YENİ ÜRÜN (DOLAR BAZLI):
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, 
         priceCash: 122.5,
@@ -34,11 +33,9 @@ const defaultProductsData = {
     }
 };
 
-// SÜRÜM GÜNCELLENDİ: myProductsV11 (Yeni ürünün anında yüklenmesi için)
-const STORAGE_KEY = 'myProductsV11'; 
+const STORAGE_KEY = 'myProductsV12'; 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ELEMENTLER
     const navCalc = document.getElementById('nav-calc');
     const navSettings = document.getElementById('nav-settings');
     const calcSection = document.getElementById('calc-section');
@@ -66,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const widthContainer = document.getElementById('width-container');
     const addWidthBtn = document.getElementById('addWidthBtn');
     const resetInputsBtn = document.getElementById('resetInputsBtn');
-    
     const heightInput = document.getElementById('height');
     
     const extraItemNameInput = document.getElementById('extraItemName');
@@ -82,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const resultArea = document.getElementById('resultArea');
     const detailInfo = document.getElementById('detailInfo');
-    const mainLogo = document.getElementById('mainLogo');
 
     const newProductName = document.getElementById('newProductName');
     const newProductImage = document.getElementById('newProductImage');
@@ -149,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
         let remainder = integerPart % 1000;
-        
         if (remainder <= 500) { 
             return thousands + 450; 
         } else { 
@@ -225,15 +219,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function addToReport(customer, channel, product, area, price) {
         let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
-        const newReport = {
+        reports.push({
             date: new Date().toLocaleString('tr-TR'),
             customer: customer || "İsimsiz Müşteri",
             channel: channel,
             product: product,
             area: area,
             price: price
-        };
-        reports.push(newReport);
+        });
         localStorage.setItem('dailyReports', JSON.stringify(reports));
     }
 
@@ -242,8 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (reports.length === 0) { alert("Rapor yok."); return; }
         let csvContent = "Tarih,Musteri Adi,Kanal,Urun,m2,Fiyat\n";
         reports.forEach(row => {
-            let rowString = `"${row.date}","${row.customer}","${row.channel}","${row.product}","${row.area}","${row.price}"`;
-            csvContent += rowString + "\n";
+            csvContent += `"${row.date}","${row.customer}","${row.channel}","${row.product}","${row.area}","${row.price}"\n`;
         });
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
@@ -269,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         widthList.forEach(w => {
             if (w <= 0) return;
-
             let currentPieces = 1;
             let currentPricingArea = 0;
 
@@ -296,10 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalPieces += currentPieces;
         });
 
-        return {
-            pricingArea: totalPricingArea,
-            pieces: totalPieces
-        };
+        return { pricingArea: totalPricingArea, pieces: totalPieces };
     }
 
     calculateBtn.addEventListener('click', () => {
@@ -405,7 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (pName.toLowerCase().includes("sürme")) continue; 
 
                 let pricingArea = 0;
-                
                 if (pName.toLowerCase().includes("giyotin")) {
                     let gResult = calculateGuillotineLogic(widthList, h);
                     pricingArea = gResult.pricingArea;
@@ -457,11 +444,9 @@ document.addEventListener('DOMContentLoaded', function() {
             reportProductName = "Tüm Sistemler (Cam Balkon & Giyotin)";
             if(extraName) reportProductName += ` + ${extraName}`;
             reportPrice = paymentType === 'cash' ? "Fiyat Listesi (Nakit)" : "Fiyat Listesi (Kart)";
-
         } 
         else {
             let selectedData = JSON.parse(selectedValue);
-            
             let pricingArea = 0;
             const productName = selectedData.name.toLowerCase();
             let priceLabel = "Cam Balkon Sistem Bedeli";
@@ -544,7 +529,6 @@ document.addEventListener('DOMContentLoaded', function() {
         shareVideoBtn.addEventListener('click', async () => {
             let videoUrl = "";
             let pName = "";
-            
             const selectedVal = productSelect.value;
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
 
@@ -583,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- TEKNİK ÇİZİM: ŞABLON KUTUSUNA UYARLANMIŞ ---
     function drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, data) {
         const pName = data.productName.toLowerCase();
         const totalW = data.totalWidthCm;
@@ -592,44 +577,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
         
-        const padding = 50; 
+        const padding = 20; 
         const drawX = boxX + padding;
         const drawY = boxY + padding;
         const drawW = boxWidth - (padding * 2);
         const drawH = boxHeight - (padding * 2);
 
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-        
         function drawDimensionLine(x1, y1, x2, y2, text, vertical = false) {
             ctx.strokeStyle = dimColor;
             ctx.fillStyle = dimColor;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
             ctx.stroke();
-            ctx.beginPath(); ctx.arc(x1, y1, 3, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(x2, y2, 3, 0, Math.PI*2); ctx.fill();
-            ctx.font = 'bold 20px Arial';
+            ctx.beginPath(); ctx.arc(x1, y1, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x2, y2, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.font = 'bold 13px "OCR A Extended", monospace';
             ctx.textAlign = 'center';
             if (vertical) {
                 ctx.save();
-                ctx.translate(x1 - 15, (y1 + y2) / 2);
+                ctx.translate(x1 - 10, (y1 + y2) / 2);
                 ctx.rotate(-Math.PI / 2);
                 ctx.fillText(text, 0, 0);
                 ctx.restore();
             } else {
-                ctx.fillText(text, (x1 + x2) / 2, y1 + 25);
+                ctx.fillText(text, (x1 + x2) / 2, y1 + 16);
             }
         }
 
-        drawDimensionLine(drawX, drawY + drawH + 15, drawX + drawW, drawY + drawH + 15, `${totalW} cm`);
-        drawDimensionLine(drawX - 15, drawY + drawH, drawX - 15, drawY, `${totalH} cm`, true);
+        drawDimensionLine(drawX, drawY + drawH + 8, drawX + drawW, drawY + drawH + 8, `${totalW} cm`);
+        drawDimensionLine(drawX - 8, drawY + drawH, drawX - 8, drawY, `${totalH} cm`, true);
 
         if (pName.includes("giyotin")) {
             const pieceWidth = drawW / parca;
-            const profileThick = 6;
+            const profileThick = 4;
             for (let i = 0; i < parca; i++) {
                 const currentX = drawX + (i * pieceWidth);
                 ctx.fillStyle = glassColor;
@@ -637,231 +619,166 @@ document.addEventListener('DOMContentLoaded', function() {
                 ctx.fillStyle = profileColor;
                 ctx.fillRect(currentX, drawY, profileThick, drawH);
                 ctx.fillRect(currentX + pieceWidth - profileThick, drawY, profileThick, drawH);
-                ctx.fillRect(currentX, drawY, pieceWidth, 40); 
-                const panelH = (drawH - 40) / 3;
-                ctx.fillRect(currentX, drawY + 40 + panelH, pieceWidth, profileThick);
-                ctx.fillRect(currentX, drawY + 40 + (panelH * 2), pieceWidth, profileThick);
-                ctx.fillRect(currentX, drawY + drawH - 20, pieceWidth, 20);
+                ctx.fillRect(currentX, drawY, pieceWidth, 25); 
+                const panelH = (drawH - 25) / 3;
+                ctx.fillRect(currentX, drawY + 25 + panelH, pieceWidth, profileThick);
+                ctx.fillRect(currentX, drawY + 25 + (panelH * 2), pieceWidth, profileThick);
+                ctx.fillRect(currentX, drawY + drawH - 15, pieceWidth, 15);
                 ctx.fillStyle = '#7f8c8d';
-                ctx.font = '16px Arial';
+                ctx.font = '12px "OCR A Extended", monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText("Sistem " + (i+1), currentX + (pieceWidth/2), drawY + drawH/2);
+                ctx.fillText("Modül " + (i+1), currentX + (pieceWidth/2), drawY + drawH/2);
             }
         } else {
             let panelCount = Math.ceil(totalW / 65);
             if (panelCount < 2) panelCount = 2;
             const panelWidth = drawW / panelCount;
-            const profileThick = 4;
+            const profileThick = 3;
             ctx.fillStyle = profileColor;
-            ctx.fillRect(drawX, drawY, drawW, 20);
-            ctx.fillRect(drawX, drawY + drawH - 20, drawW, 20);
+            ctx.fillRect(drawX, drawY, drawW, 14);
+            ctx.fillRect(drawX, drawY + drawH - 14, drawW, 14);
             for (let i = 0; i < panelCount; i++) {
                 const currentX = drawX + (i * panelWidth);
                 ctx.fillStyle = glassColor;
-                ctx.fillRect(currentX + profileThick, drawY + 20, panelWidth - (profileThick*2), drawH - 40);
+                ctx.fillRect(currentX + profileThick, drawY + 14, panelWidth - (profileThick*2), drawH - 28);
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(currentX, drawY + 20, profileThick, drawH - 40);
-                ctx.fillRect(currentX + panelWidth - profileThick, drawY + 20, profileThick, drawH - 40);
+                ctx.fillRect(currentX, drawY + 14, profileThick, drawH - 28);
+                ctx.fillRect(currentX + panelWidth - profileThick, drawY + 14, profileThick, drawH - 28);
                 if (i === 0) {
                     ctx.fillStyle = '#000000';
-                    ctx.fillRect(currentX + panelWidth - 15, drawY + (drawH/2) - 20, 10, 40);
-                    ctx.beginPath();
-                    ctx.arc(currentX + panelWidth - 10, drawY + (drawH/2), 5, 0, Math.PI*2);
-                    ctx.fill();
+                    ctx.fillRect(currentX + panelWidth - 10, drawY + (drawH/2) - 15, 6, 25);
                 }
             }
             ctx.fillStyle = profileColor;
-            ctx.fillRect(drawX, drawY, 10, drawH);
-            ctx.fillRect(drawX + drawW - 10, drawY, 10, drawH);
+            ctx.fillRect(drawX, drawY, 8, drawH);
+            ctx.fillRect(drawX + drawW - 8, drawY, 8, drawH);
         }
-
-        ctx.fillStyle = '#333';
-        ctx.font = 'bold 24px Segoe UI, Arial';
-        ctx.textAlign = 'center';
-        let schemaLabel = `TEKNİK GÖRÜNÜŞ`;
-        ctx.fillText(schemaLabel, boxX + (boxWidth / 2), boxY + boxHeight + 35);
     }
 
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    // --- YENİ ŞABLON TEMELLİ CANVAS OLUŞTURUCU ---
     async function createCanvasImage() {
         if (!lastCalculation) return null;
 
+        const isCash = lastCalculation.paymentType === 'cash';
+        const templateSrc = isCash ? 'sablon-nakit.jpg' : 'sablon-taksit.jpg';
+
+        let bgImage;
+        try {
+            bgImage = await loadImage(templateSrc);
+        } catch (err) {
+            alert("Şablon görseli yüklenemedi! Dosya adlarını (sablon-nakit.jpg / sablon-taksit.jpg) kontrol ediniz.");
+            return null;
+        }
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const width = 1080;
-        const height = 1527;
+        const width = bgImage.naturalWidth || 595;
+        const height = bgImage.naturalHeight || 842;
         canvas.width = width;
         canvas.height = height;
 
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
+        // 1. Arka plan şablonunu bas
+        ctx.drawImage(bgImage, 0, 0, width, height);
 
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#888888';
-        ctx.font = '24px Segoe UI, Arial';
-        const today = new Date().toLocaleDateString('tr-TR');
-        ctx.fillText(today, width - 40, 50);
+        // Oran katsayıları
+        const scaleX = width / 595;
+        const scaleY = height / 842;
 
-        ctx.textAlign = 'center';
-        const logoWidth = 500;
-        const logoHeight = (mainLogo.naturalHeight / mainLogo.naturalWidth) * logoWidth;
-        const logoX = (width - logoWidth) / 2;
-        ctx.drawImage(mainLogo, logoX, 60, logoWidth, logoHeight);
-
-        let currentY = 60 + logoHeight + 40; 
-        
         if (lastCalculation.isMulti) {
-            ctx.fillStyle = '#333330';
-            ctx.font = 'bold 50px Segoe UI, Arial';
-            ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, currentY);
-            currentY += 60;
-            
-            ctx.font = '30px Segoe UI, Arial';
-            ctx.fillStyle = '#666';
-            ctx.fillText(`Ölçüler: ${lastCalculation.details} | Toplam Alan: ${lastCalculation.area} m²`, width / 2, currentY);
-            currentY += 80;
+            // ÇOKLU LİSTE ŞABLON UYARLAMASI
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(55 * scaleX, 290 * scaleY, 485 * scaleX, 260 * scaleY);
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(55 * scaleX, 290 * scaleY, 485 * scaleX, 260 * scaleY);
 
-            ctx.beginPath();
-            ctx.moveTo(100, currentY);
-            ctx.lineTo(980, currentY);
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            currentY += 60;
+            ctx.fillStyle = '#1e293b';
+            ctx.font = `bold ${Math.round(18 * scaleX)}px "Dela Gothic One", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText("FİYAT TEKLİF LİSTESİ", width / 2, 320 * scaleY);
 
-            let products = lastCalculation.multiResults;
-            
-            products.forEach(item => {
-                ctx.fillStyle = '#2c3e50';
-                ctx.font = 'bold 36px Segoe UI, Arial';
-                
-                const maxWidthMulti = 900; 
-                const words = item.name.split(' ');
-                let line = '';
-                
-                for(let n = 0; n < words.length; n++) {
-                    const testLine = line + words[n] + ' ';
-                    const metrics = ctx.measureText(testLine);
-                    if (metrics.width > maxWidthMulti && n > 0) {
-                        ctx.fillText(line, width / 2, currentY);
-                        line = words[n] + ' ';
-                        currentY += 45; 
-                    } else {
-                        line = testLine;
-                    }
-                }
-                ctx.fillText(line, width / 2, currentY);
-                currentY += 50;
+            let startY = 350 * scaleY;
+            lastCalculation.multiResults.forEach(item => {
+                ctx.fillStyle = '#334155';
+                ctx.font = `bold ${Math.round(11 * scaleX)}px "OCR A Extended", monospace`;
+                ctx.textAlign = 'left';
+                let shortName = item.name.replace("Progold ", "").substring(0, 32);
+                ctx.fillText(shortName, 65 * scaleX, startY);
 
-                ctx.fillStyle = '#27ae60';
-                ctx.font = 'bold 44px Segoe UI, Arial';
-                ctx.fillText(item.formattedPrice, width / 2, currentY);
-                currentY += 40;
-
-                ctx.beginPath();
-                ctx.moveTo(300, currentY);
-                ctx.lineTo(780, currentY);
-                ctx.strokeStyle = '#eee';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                currentY += 60; 
+                ctx.fillStyle = '#0f172a';
+                ctx.font = `bold ${Math.round(12 * scaleX)}px "Dela Gothic One", sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.fillText(item.formattedPrice, (width - 65 * scaleX), startY);
+                startY += 30 * scaleY;
             });
 
-            if(lastCalculation.extraPrice > 0) {
-                currentY += 20;
-                ctx.fillStyle = '#e67e22';
-                ctx.font = 'italic 30px Segoe UI, Arial';
-                ctx.fillText(`Not: Fiyatlara "${lastCalculation.extraName}" bedeli dahildir.`, width / 2, currentY);
-            }
+            // 1. Satıra Başlık Yaz
+            ctx.fillStyle = '#0f172a';
+            ctx.font = `bold ${Math.round(14 * scaleX)}px "OCR A Extended", monospace`;
+            ctx.textAlign = 'left';
+            ctx.fillText("Cam Balkon Sistem Çeşitleri", 125 * scaleX, 195 * scaleY);
+
+            // Toplam Alan Bilgisi
+            ctx.fillStyle = '#0f172a';
+            ctx.font = `bold ${Math.round(14 * scaleX)}px "OCR A Extended", monospace`;
+            ctx.textAlign = 'left';
+            ctx.fillText(`${lastCalculation.area} m²  ${lastCalculation.details}`, 175 * scaleX, 570 * scaleY);
+
+            // Fiyat Butonu (Lacivert Alanın İçi)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${Math.round(28 * scaleX)}px "Dela Gothic One", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText("LİSTELENDİ", width / 2, 655 * scaleY);
 
         } else {
-            ctx.fillStyle = '#333330';
-            ctx.font = 'bold 40px Segoe UI, Arial';
-            
-            let productName = lastCalculation.productName;
+            // TEKİL ÜRÜN ŞABLON UYARLAMASI
 
-            const maxWidth = 950;
-            const lineHeight = 50;
-            const words = productName.split(' ');
-            let line = '';
-            
-            for(let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = ctx.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
-                    ctx.fillText(line, width / 2, currentY);
-                    line = words[n] + ' ';
-                    currentY += lineHeight;
-                } else {
-                    line = testLine;
-                }
-            }
-            ctx.fillText(line, width / 2, currentY);
-            currentY += 50; 
+            // 1. İş Tanımı Tablosu 1. Satır
+            ctx.fillStyle = '#0f172a';
+            let titleFontSize = 13 * scaleX;
+            if (lastCalculation.productName.length > 40) titleFontSize = 11 * scaleX;
+            ctx.font = `bold ${Math.round(titleFontSize)}px "OCR A Extended", monospace`;
+            ctx.textAlign = 'left';
+            ctx.fillText(lastCalculation.productName, 125 * scaleX, 195 * scaleY);
 
-            const boxWidth = 900;
-            const boxHeight = 450; 
-            const boxX = (width - boxWidth) / 2;
-            const boxY = currentY; 
-            drawSystemSchema(ctx, boxX, boxY, boxWidth, boxHeight, lastCalculation);
-            currentY += boxHeight + 60;
+            // 2. Teknik Çizim Alanı
+            const boxX = 55 * scaleX;
+            const boxY = 300 * scaleY;
+            const boxW = 485 * scaleX;
+            const boxH = 245 * scaleY;
 
-            let detailsY = currentY;
-            ctx.beginPath();
-            ctx.moveTo(200, detailsY);
-            ctx.lineTo(880, detailsY);
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            detailsY += 40; 
+            drawSystemSchema(ctx, boxX, boxY, boxW, boxH, lastCalculation);
 
-            ctx.fillStyle = '#666666';
-            ctx.font = '40px Segoe UI, Arial';
-            ctx.fillText(`Toplam Alan: ${lastCalculation.area} m²  ${lastCalculation.details}`, width / 2, detailsY);
-            detailsY += 50; 
+            // 3. Toplam Alan Bilgisi
+            ctx.fillStyle = '#0f172a';
+            ctx.font = `bold ${Math.round(14 * scaleX)}px "OCR A Extended", monospace`;
+            ctx.textAlign = 'left';
+            ctx.fillText(`${lastCalculation.area} m²  ${lastCalculation.details}`, 175 * scaleX, 570 * scaleY);
 
+            // 4. Fiyat (Lacivert Oval Alanın İçi)
+            ctx.fillStyle = '#ffffff';
+            let priceFontSize = 40 * scaleX;
+            if (lastCalculation.grandTotalStr.length > 10) priceFontSize = 34 * scaleX;
+            ctx.font = `bold ${Math.round(priceFontSize)}px "Dela Gothic One", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(lastCalculation.grandTotalStr, width / 2, 655 * scaleY);
+
+            // Ek Malzeme Bildirimi Varsa Küçük Not
             if (lastCalculation.extraPrice > 0) {
-                detailsY += 20;
-                ctx.font = 'bold 35px Segoe UI, Arial';
-                ctx.fillStyle = '#555555';
-                ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
-                
-                detailsY += 90; 
-                ctx.fillStyle = '#28a745';
-                ctx.font = 'bold 100px Segoe UI, Arial';
-                ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
-                
-                detailsY += 50; 
                 ctx.fillStyle = '#e67e22';
-                ctx.font = 'italic 30px Segoe UI, Arial';
-                ctx.fillText(`Not: Fiyatlara "${lastCalculation.extraName}" bedeli dahildir.`, width / 2, detailsY);
-            } else {
-                detailsY += 20;
-                ctx.font = 'bold 35px Segoe UI, Arial';
-                ctx.fillStyle = '#555555';
-                ctx.fillText(lastCalculation.priceLabel, width / 2, detailsY);
-                
-                detailsY += 100; 
-                ctx.fillStyle = '#28a745';
-                ctx.font = 'bold 100px Segoe UI, Arial';
-                ctx.fillText(lastCalculation.grandTotalStr, width / 2, detailsY);
+                ctx.font = `italic ${Math.round(11 * scaleX)}px "OCR A Extended", monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(`* Fiyata ${lastCalculation.extraName} bedeli dahildir.`, width / 2, 700 * scaleY);
             }
-        }
-
-        const footerHeight = 200;
-        const footerY = height - footerHeight;
-        
-        ctx.fillStyle = '#F37021';
-        ctx.fillRect(0, footerY, width, footerHeight);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 34px Segoe UI, Arial';
-        ctx.fillText("SİSTEMLERİMİZ 5 YIL GARANTİLİDİR", width / 2, footerY + 80);
-
-        ctx.font = 'bold 34px Segoe UI, Arial';
-        if (lastCalculation.paymentType === 'cash') {
-            ctx.fillText("Bu teklif NAKİT ödemelere özel olarak hazırlanmıştır", width / 2, footerY + 140);
-        } else {
-            ctx.fillText("Tüm kartlara peşin fiyatına 5 taksit fırsatı", width / 2, footerY + 140);
         }
 
         return canvas;
@@ -871,16 +788,10 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
             if(!canvas) return;
-            let fileName = "Teklif.jpg";
-            if(lastCalculation.isMulti) {
-                fileName = "Fiyat_Listesi.jpg";
-            } else {
-                fileName = `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
-            }
-            
+            let fileName = lastCalculation.isMulti ? "Fiyat_Listesi.jpg" : `Teklif-${lastCalculation.productName.replace(/ /g,"-")}.jpg`;
             const link = document.createElement('a');
             link.download = fileName;
-            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
             link.click();
         });
     }
@@ -889,7 +800,6 @@ document.addEventListener('DOMContentLoaded', function() {
         shareBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
             if(!canvas) return;
-            
             canvas.toBlob(async (blob) => {
                 const file = new File([blob], `Teklif.png`, { type: 'image/png' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
