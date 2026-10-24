@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V31 - KARMA TEKLİF & YAN YANA ÇİZİM) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V32 - KARMA TEKLİF ESTETİK DÜZELTMELER) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, priceCash: 122.5, img: "1",
@@ -26,7 +26,7 @@ const defaultProductsData = {
     }
 };
 
-const STORAGE_KEY = 'myProductsV13'; 
+const STORAGE_KEY = 'myProductsV14'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if(shareVideoBtn) shareVideoBtn.style.display = 'block';
 
-    // Dinamik Sistem Bloğu Yönetimi (Event Delegation)
     systemsContainer.addEventListener('click', function(e) {
         if (e.target.classList.contains('addWidthBtn')) {
             const block = e.target.closest('.system-block');
@@ -107,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
         newBlock.querySelector('.heightInput').value = '';
         newBlock.querySelector('.productSelect').selectedIndex = 0;
         
-        // İlk blok dışındakilere "Sil" butonu ekle
         if (!newBlock.querySelector('.remove-system-btn')) {
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-system-btn';
@@ -212,10 +210,48 @@ document.addEventListener('DOMContentLoaded', function() {
         selects.forEach(sel => {
             const currentVal = sel.value;
             sel.innerHTML = optionsHTML;
-            sel.value = currentVal; // Seçili olanı koru
+            sel.value = currentVal;
         });
         if(deleteSel) deleteSel.innerHTML = delOptionsHTML;
     }
+
+    function addToReport(customer, channel, product, area, price) {
+        let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        reports.push({
+            date: new Date().toLocaleString('tr-TR'),
+            customer: customer || "İsimsiz Müşteri",
+            channel: channel,
+            product: product,
+            area: area,
+            price: price
+        });
+        localStorage.setItem('dailyReports', JSON.stringify(reports));
+    }
+
+    downloadReportBtn.addEventListener('click', () => {
+        let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        if (reports.length === 0) { alert("Rapor yok."); return; }
+        let csvContent = "Tarih,Musteri Adi,Kanal,Urun,m2,Fiyat\n";
+        reports.forEach(row => {
+            csvContent += `"${row.date}","${row.customer}","${row.channel}","${row.product}","${row.area}","${row.price}"\n`;
+        });
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        const today = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Gunluk_Rapor_${today}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    clearReportBtn.addEventListener('click', () => {
+        if(confirm("Tüm günlük rapor kayıtları silinecek. Emin misiniz?")) {
+            localStorage.removeItem('dailyReports');
+            alert("Rapor temizlendi.");
+        }
+    });
 
     function calculateGuillotineLogic(widthList, height) {
         let totalPricingArea = 0;
@@ -247,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return { pricingArea: totalPricingArea, pieces: totalPieces };
     }
 
-    // --- HESAPLAMA MOTORU (ÇOKLU SİSTEM DESTEĞİ İLE) ---
     calculateBtn.addEventListener('click', () => {
         const rate = parseFloat(currentRateInput.value);
         const paymentType = globalPaymentType.value;
@@ -261,7 +296,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let grandTotalRaw = 0;
         let totalAreaGlobal = 0;
 
-        // "Özel Seçenekler" (Tüm Sistemler listesi vs) sadece 1. blokta seçildiyse eskisi gibi çalışır
         let isSpecialListMode = false;
         let specialListType = "";
 
@@ -276,17 +310,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isNaN(val) && val > 0) { wList.push(val); totalW += val; }
             });
 
-            if (!selectedValue || totalW <= 0 || isNaN(h)) return; // Eksik blokları atla
+            if (!selectedValue || totalW <= 0 || isNaN(h)) return;
 
             if (index === 0 && (selectedValue === "GLASS_BALCONY_VARIANTS" || selectedValue === "MULTI_CALCULATION")) {
                 isSpecialListMode = true;
                 specialListType = selectedValue;
-                // Özel listeler ilk bloğun ölçülerini baz alır
                 combinedSystems.push({ wList, totalW, h }); 
                 return;
             }
 
-            // Normal Ürün İşleme
             let selectedData = JSON.parse(selectedValue);
             const pName = selectedData.name.toLowerCase();
             let pricingArea = 0, calculatedParca = 1;
@@ -326,7 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-        // ÖZEL LİSTE SENARYOLARI (Eski Yapı Korundu)
         if (isSpecialListMode) {
             const targetData = combinedSystems[0];
             let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
@@ -370,14 +401,14 @@ document.addEventListener('DOMContentLoaded', function() {
             resultArea.querySelector('.result-big').textContent = "Çeşit Listesi Hazır";
             detailInfo.innerHTML = `Alan: ${realArea.toFixed(2)} m² <br>Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'}`;
         } 
-        // KARMA TEKLİF & TEKİL SİSTEM SENARYOSU
         else {
             const finalGrandTL = smartRound(grandTotalRaw) + extraPrice;
             const formattedGrandTotal = fmtTL.format(finalGrandTL);
             
+            // Karma teklif parantezi kaldırıldı
             let detailsText = combinedSystems.length === 1 ? 
                 `(En: ${combinedSystems[0].totalW}cm x Boy: ${combinedSystems[0].h}cm)` : 
-                `(${combinedSystems.length} Farklı Sistem Toplamı)`;
+                "";
 
             lastCalculation = {
                 isSpecialList: false,
@@ -390,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 grandTotalStr: formattedGrandTotal,
                 canvasPriceStr: formatCanvasPrice(finalGrandTL),
                 details: detailsText,
-                productVideo: combinedSystems[0].video, // İlk ürünün videosunu paylaşır
+                productVideo: combinedSystems[0].video,
                 productName: combinedSystems.length === 1 ? combinedSystems[0].productName : "Karma Sistem Teklifi"
             };
 
@@ -413,30 +444,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- TEKNİK ÇİZİM: TEK VEYA YAN YANA BÖLÜNMÜŞ (FİKİR B) ---
+    // --- TEKNİK ÇİZİM KODU (BÖLÜNMÜŞ ÇİZİMLER İÇİN ETİKET VE AYIRICI EKLENDİ) ---
     function drawSystemSchema(ctx, scaleX, scaleY, data) {
         const profileColor = '#2c3e50';
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
 
-        // Temel çerçeve güvenli iç koordinatları
-        const startX = 96 * scaleX;
-        const startY = 322 * scaleY;
-        const totalW = 426 * scaleX; 
-        const drawH = 194 * scaleY; 
+        // Çizim alanının yatay ve dikey kısıtlamaları
+        const startX = 75 * scaleX;
+        const startY = 320 * scaleY;
+        const totalW = 450 * scaleX; 
+        const drawH = 175 * scaleY; // Label (isim) için alt boşluk artırıldı
 
-        // Sistemleri Çizen Alt Fonksiyon
         function drawSingle(sys, bX, bW) {
             // Ölçü Okları
             ctx.strokeStyle = dimColor; ctx.fillStyle = dimColor; ctx.lineWidth = 1.6 * scaleX;
+            
             // Alt Yatay Ölçü
             const dimBottomY = startY + drawH + (11 * scaleY);
             ctx.beginPath(); ctx.moveTo(bX, dimBottomY); ctx.lineTo(bX + bW, dimBottomY); ctx.stroke();
             ctx.beginPath(); ctx.arc(bX, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(bX + bW, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
+            
             ctx.font = `bold ${Math.round(10 * scaleX)}px "OCR A Extended", monospace`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (13 * scaleY));
+            ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (12 * scaleY));
 
             // Sol Dikey Ölçü
             const dimLeftX = bX - (10 * scaleX);
@@ -448,6 +480,16 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.rotate(-Math.PI / 2);
             ctx.fillText(`${sys.h}cm`, 0, 0);
             ctx.restore();
+
+            // Sistem Etiketi (Giyotin, Cam Balkon vb.) - Çizimin Altına Yazılır
+            let sysLabel = "CAM BALKON";
+            const pNameLower = sys.productName.toLowerCase();
+            if (pNameLower.includes("giyotin")) sysLabel = "GİYOTİN";
+            else if (pNameLower.includes("sürme")) sysLabel = "SÜRME SİSTEM";
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = `bold ${Math.round(12 * scaleX)}px "Segoe UI", Arial, sans-serif`;
+            ctx.fillText(sysLabel, bX + (bW / 2), dimBottomY + (28 * scaleY));
 
             // Kasa & Cam Çizimi
             if (sys.isGuillotine) {
@@ -497,19 +539,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Eğer Yan Yana İse (Karma Sistem)
+        // Eğer Karma Sistem ise kutuyu böl ve ayırıcı çizgi çek
         if (data.isCombined) {
             const sysCount = data.systems.length;
-            const gap = 35 * scaleX; // Sistemler arası boşluk
+            const gap = 55 * scaleX; // Sistemler arası ayrımı belirginleştirdik
             const totalGap = gap * (sysCount - 1);
             const subBoxW = (totalW - totalGap) / sysCount;
 
             data.systems.forEach((sys, idx) => {
                 const subBoxX = startX + (idx * (subBoxW + gap));
                 drawSingle(sys, subBoxX, subBoxW);
+
+                // Dikey Ayırıcı Çizgi (Sistemleri birbirinden görsel olarak koparmak için)
+                if (idx < sysCount - 1) {
+                    const sepX = subBoxX + subBoxW + (gap / 2);
+                    ctx.strokeStyle = '#e2e8f0'; // Hafif gri çizgi
+                    ctx.lineWidth = 1.5 * scaleX;
+                    ctx.beginPath();
+                    ctx.moveTo(sepX, startY);
+                    ctx.lineTo(sepX, startY + drawH + (35 * scaleY));
+                    ctx.stroke();
+                }
             });
         } else {
-            // Tekil Sistem (Geniş)
             drawSingle(data.systems[0], startX, totalW);
         }
     }
@@ -589,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillStyle = '#1c2649';
             ctx.font = `bold ${Math.round(12.5 * scaleX)}px "OCR A Extended", monospace`;
             ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-            ctx.fillText(`${lastCalculation.area} m²  ${lastCalculation.details}`, 168 * scaleX, 574 * scaleY); // 574px GÜNCELLEMESİ
+            ctx.fillText(`${lastCalculation.area} m²  ${lastCalculation.details}`, 168 * scaleX, 574 * scaleY);
 
             ctx.fillStyle = '#ffffff';
             ctx.font = `bold ${Math.round(24 * scaleX)}px "Segoe UI", Arial, sans-serif`;
@@ -597,31 +649,39 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText("SEÇENEKLİ TEKLİF", width / 2, 636 * scaleY);
 
         } else {
-            // --- TEKİL VEYA KARMA TEKLİF (YANYANA ÇİZİM) ---
+            // --- TEKİL VEYA KARMA TEKLİF ---
 
-            // İş Tanımı Tablosu Yazımı (Satır 1, 2, 3...)
-            let rowY = 164 * scaleY; // 1. satır hizası
-            const rowHeight = 31.5 * scaleY; // Satırlar arası boşluk şablona göre
+            // İş Tanımı Tablosu Yazımı (1. Font boyutu sabitlendi ve kalın yapıldı)
+            let rowY = 164 * scaleY; 
+            const rowHeight = 31.5 * scaleY; 
             lastCalculation.systems.forEach((sys, idx) => {
-                if (idx > 3) return; // Tablo en fazla 4 satır alıyor
+                if (idx > 3) return; 
                 ctx.fillStyle = '#1c2649';
-                let prefix = lastCalculation.isCombined ? `[Sistem ${idx+1}] ` : "";
-                fitSingleLineText(ctx, prefix + sys.productName, 412 * scaleX, 12 * scaleX, 8.5 * scaleX, '"OCR A Extended", monospace');
+                
+                // Sabit kalın ve okunaklı font
+                ctx.font = `bold ${Math.round(12 * scaleX)}px "Segoe UI", Arial, sans-serif`;
                 ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-                ctx.fillText(prefix + sys.productName, 125 * scaleX, rowY);
+                
+                // Taşma olursa maxWidth parametresi ile otomatik sıkıştırılır
+                ctx.fillText(sys.productName, 125 * scaleX, rowY, 412 * scaleX);
                 rowY += rowHeight;
             });
 
             // Temsili Çizim
             drawSystemSchema(ctx, scaleX, scaleY, lastCalculation);
 
-            // Toplam Alan (Kayma Düzeltildi - 574 * scaleY)
+            // Toplam Alan Metni ("2 Farklı Sistem" silindi)
+            let alanText = `${lastCalculation.area} m²`;
+            if (lastCalculation.details) {
+                alanText += `  ${lastCalculation.details}`;
+            }
+            
             ctx.fillStyle = '#1c2649';
             ctx.font = `bold ${Math.round(12.5 * scaleX)}px "OCR A Extended", monospace`;
             ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-            ctx.fillText(`${lastCalculation.area} m²  ${lastCalculation.details}`, 168 * scaleX, 574 * scaleY);
+            ctx.fillText(alanText, 168 * scaleX, 574 * scaleY);
 
-            // Fiyat (Dela Gothic One)
+            // Fiyat
             ctx.fillStyle = '#ffffff';
             fitSingleLineText(ctx, lastCalculation.canvasPriceStr, 380 * scaleX, 34 * scaleX, 22 * scaleX, '"Dela Gothic One", sans-serif');
             const finalPriceSize = parseInt(ctx.font.match(/\d+/)[0], 10);
@@ -630,7 +690,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText(lastCalculation.canvasPriceStr, width / 2, 636 * scaleY);
         }
 
-        // Genel Ek Malzeme Notu
         if (lastCalculation.extraPrice > 0) {
             ctx.fillStyle = '#d97706';
             ctx.font = `italic bold ${Math.round(11 * scaleX)}px "OCR A Extended", monospace`;
