@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V32 - KARMA TEKLİF ESTETİK DÜZELTMELER) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V33 - YENİ ÜRÜN VE ÖZEL YÜKSEKLİK KURALLARI) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, priceCash: 122.5, img: "1",
@@ -23,10 +23,14 @@ const defaultProductsData = {
     "Isıcamlı Sürme Sistem Cam Balkon": {
         priceCard: 210, priceCash: 185, img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
+    },
+    "Alüminyum Sabit Doğrama": {
+        priceCard: 130, priceCash: 105, img: "6",
+        video: ""
     }
 };
 
-const STORAGE_KEY = 'myProductsV14'; 
+const STORAGE_KEY = 'myProductsV15'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
@@ -327,7 +331,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 let gResult = calculateGuillotineLogic(wList, h);
                 pricingArea = gResult.pricingArea;
                 calculatedParca = gResult.pieces;
+            } else if (pName.includes("sabit doğrama")) {
+                // SABİT DOĞRAMA İÇİN MİN. KURALLAR YOK - GİRİLEN YÜKSEKLİK VE M2 GEÇERLİ
+                pricingArea = (totalW * h) / 10000;
+                calculatedParca = Math.ceil(totalW / 65);
+            } else if (pName === "8mm kollu çıtalı sistem katlanır cam balkon" || pName.includes("8mm kollu çıtalı sistem")) {
+                // SADECE BU ÜRÜNE ÖZEL 160 CM MİN. YÜKSEKLİK KURALI
+                let pricingHeight = h < 160 ? 160 : h;
+                pricingArea = (totalW * pricingHeight) / 10000;
+                if (pricingArea < 5) pricingArea = 5;
+                calculatedParca = Math.ceil(totalW / 65);
             } else {
+                // STANDART CAM BALKON KURALLARI (180 cm min. yükseklik, min 5m2)
                 let pricingHeight = h < 180 ? 180 : h;
                 pricingArea = (totalW * pricingHeight) / 10000;
                 if (pricingArea < 5) pricingArea = 5;
@@ -372,8 +387,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isGlassOnly && pName.toLowerCase().includes("sürme")) continue;
 
                 let pricingArea = 0;
-                if (pName.toLowerCase().includes("giyotin")) {
+                let pNameLower = pName.toLowerCase();
+                
+                if (pNameLower.includes("giyotin")) {
                     pricingArea = calculateGuillotineLogic(targetData.wList, targetData.h).pricingArea;
+                } else if (pNameLower.includes("sabit doğrama")) {
+                    pricingArea = (targetData.totalW * targetData.h) / 10000;
+                } else if (pNameLower.includes("8mm kollu çıtalı sistem")) {
+                    let pH = targetData.h < 160 ? 160 : targetData.h;
+                    pricingArea = (targetData.totalW * pH) / 10000;
+                    if (pricingArea < 5) pricingArea = 5;
                 } else {
                     let pH = targetData.h < 180 ? 180 : targetData.h;
                     pricingArea = (targetData.totalW * pH) / 10000;
@@ -405,7 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const finalGrandTL = smartRound(grandTotalRaw) + extraPrice;
             const formattedGrandTotal = fmtTL.format(finalGrandTL);
             
-            // Karma teklif parantezi kaldırıldı
             let detailsText = combinedSystems.length === 1 ? 
                 `(En: ${combinedSystems[0].totalW}cm x Boy: ${combinedSystems[0].h}cm)` : 
                 "";
@@ -444,125 +466,103 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- TEKNİK ÇİZİM KODU (BÖLÜNMÜŞ ÇİZİMLER İÇİN ETİKET VE AYIRICI EKLENDİ) ---
+    // --- TEKNİK ÇİZİM: HER ZAMAN İLK ÜRÜN (TEK VE ORTALI GÖSTERİM) ---
     function drawSystemSchema(ctx, scaleX, scaleY, data) {
         const profileColor = '#2c3e50';
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
 
-        // Çizim alanının yatay ve dikey kısıtlamaları
+        // Temel çerçeve güvenli iç koordinatları (Tek çizim için tam genişlik)
         const startX = 75 * scaleX;
         const startY = 320 * scaleY;
         const totalW = 450 * scaleX; 
-        const drawH = 175 * scaleY; // Label (isim) için alt boşluk artırıldı
+        const drawH = 175 * scaleY; 
 
-        function drawSingle(sys, bX, bW) {
-            // Ölçü Okları
-            ctx.strokeStyle = dimColor; ctx.fillStyle = dimColor; ctx.lineWidth = 1.6 * scaleX;
-            
-            // Alt Yatay Ölçü
-            const dimBottomY = startY + drawH + (11 * scaleY);
-            ctx.beginPath(); ctx.moveTo(bX, dimBottomY); ctx.lineTo(bX + bW, dimBottomY); ctx.stroke();
-            ctx.beginPath(); ctx.arc(bX, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(bX + bW, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
-            
-            ctx.font = `bold ${Math.round(10 * scaleX)}px "OCR A Extended", monospace`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (12 * scaleY));
+        // Her zaman data.systems[0] (ilk seçilen ürün) baz alınır
+        const sys = data.systems[0];
+        const bX = startX;
+        const bW = totalW;
 
-            // Sol Dikey Ölçü
-            const dimLeftX = bX - (10 * scaleX);
-            ctx.beginPath(); ctx.moveTo(dimLeftX, startY); ctx.lineTo(dimLeftX, startY + drawH); ctx.stroke();
-            ctx.beginPath(); ctx.arc(dimLeftX, startY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(dimLeftX, startY + drawH, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
-            ctx.save();
-            ctx.translate(dimLeftX - (10 * scaleX), startY + (drawH / 2));
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText(`${sys.h}cm`, 0, 0);
-            ctx.restore();
+        // Ölçü Okları
+        ctx.strokeStyle = dimColor; ctx.fillStyle = dimColor; ctx.lineWidth = 1.6 * scaleX;
+        
+        // Alt Yatay Ölçü
+        const dimBottomY = startY + drawH + (11 * scaleY);
+        ctx.beginPath(); ctx.moveTo(bX, dimBottomY); ctx.lineTo(bX + bW, dimBottomY); ctx.stroke();
+        ctx.beginPath(); ctx.arc(bX, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bX + bW, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
+        
+        ctx.font = `bold ${Math.round(10 * scaleX)}px "OCR A Extended", monospace`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (12 * scaleY));
 
-            // Sistem Etiketi (Giyotin, Cam Balkon vb.) - Çizimin Altına Yazılır
-            let sysLabel = "CAM BALKON";
-            const pNameLower = sys.productName.toLowerCase();
-            if (pNameLower.includes("giyotin")) sysLabel = "GİYOTİN";
-            else if (pNameLower.includes("sürme")) sysLabel = "SÜRME SİSTEM";
+        // Sol Dikey Ölçü
+        const dimLeftX = bX - (10 * scaleX);
+        ctx.beginPath(); ctx.moveTo(dimLeftX, startY); ctx.lineTo(dimLeftX, startY + drawH); ctx.stroke();
+        ctx.beginPath(); ctx.arc(dimLeftX, startY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(dimLeftX, startY + drawH, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.translate(dimLeftX - (10 * scaleX), startY + (drawH / 2));
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(`${sys.h}cm`, 0, 0);
+        ctx.restore();
 
-            ctx.fillStyle = '#0f172a';
-            ctx.font = `bold ${Math.round(12 * scaleX)}px "Segoe UI", Arial, sans-serif`;
-            ctx.fillText(sysLabel, bX + (bW / 2), dimBottomY + (28 * scaleY));
+        // Sistem Etiketi (Çizimin Altına Yazılır)
+        let sysLabel = "CAM BALKON";
+        const pNameLower = sys.productName.toLowerCase();
+        if (pNameLower.includes("giyotin")) sysLabel = "GİYOTİN";
+        else if (pNameLower.includes("sürme")) sysLabel = "SÜRME SİSTEM";
+        else if (pNameLower.includes("sabit doğrama")) sysLabel = "SABİT DOĞRAMA";
 
-            // Kasa & Cam Çizimi
-            if (sys.isGuillotine) {
-                const pieceWidth = bW / sys.parcaSayisi;
-                const profileThick = 4 * scaleX;
-                const motorBoxH = 22 * scaleY;
-                const bottomRailH = 14 * scaleY;
+        ctx.fillStyle = '#0f172a';
+        ctx.font = `bold ${Math.round(14 * scaleX)}px "Segoe UI", Arial, sans-serif`;
+        ctx.fillText(sysLabel, bX + (bW / 2), dimBottomY + (28 * scaleY));
 
-                for (let i = 0; i < sys.parcaSayisi; i++) {
-                    const currentX = bX + (i * pieceWidth);
-                    ctx.fillStyle = glassColor; ctx.fillRect(currentX, startY, pieceWidth, drawH);
-                    ctx.fillStyle = profileColor;
-                    ctx.fillRect(currentX, startY, profileThick, drawH);
-                    ctx.fillRect(currentX + pieceWidth - profileThick, startY, profileThick, drawH);
-                    ctx.fillRect(currentX, startY, pieceWidth, motorBoxH); 
-                    const panelH = (drawH - motorBoxH) / 3;
-                    ctx.fillRect(currentX, startY + motorBoxH + panelH, pieceWidth, profileThick);
-                    ctx.fillRect(currentX, startY + motorBoxH + (panelH * 2), pieceWidth, profileThick);
-                    ctx.fillRect(currentX, startY + drawH - bottomRailH, pieceWidth, bottomRailH);
-                }
-            } else {
-                let panelCount = Math.ceil(sys.totalW / 65);
-                if (panelCount < 2) panelCount = 2;
-                const panelWidth = bW / panelCount;
-                const profileThick = 3 * scaleX;
-                const railH = 13 * scaleY;
+        // Kasa & Cam Çizimi
+        if (sys.isGuillotine) {
+            const pieceWidth = bW / sys.parcaSayisi;
+            const profileThick = 4 * scaleX;
+            const motorBoxH = 22 * scaleY;
+            const bottomRailH = 14 * scaleY;
 
+            for (let i = 0; i < sys.parcaSayisi; i++) {
+                const currentX = bX + (i * pieceWidth);
+                ctx.fillStyle = glassColor; ctx.fillRect(currentX, startY, pieceWidth, drawH);
                 ctx.fillStyle = profileColor;
-                ctx.fillRect(bX, startY, bW, railH);
-                ctx.fillRect(bX, startY + drawH - railH, bW, railH);
-
-                for (let i = 0; i < panelCount; i++) {
-                    const currentX = bX + (i * panelWidth);
-                    ctx.fillStyle = glassColor;
-                    ctx.fillRect(currentX + profileThick, startY + railH, panelWidth - (profileThick * 2), drawH - (railH * 2));
-                    ctx.fillStyle = '#bdc3c7';
-                    ctx.fillRect(currentX, startY + railH, profileThick, drawH - (railH * 2));
-                    ctx.fillRect(currentX + panelWidth - profileThick, startY + railH, profileThick, drawH - (railH * 2));
-                    if (i === 0) {
-                        ctx.fillStyle = '#000000';
-                        ctx.fillRect(currentX + panelWidth - (8 * scaleX), startY + (drawH / 2) - (12 * scaleY), 4 * scaleX, 24 * scaleY);
-                    }
-                }
-                ctx.fillStyle = profileColor;
-                ctx.fillRect(bX, startY, 6 * scaleX, drawH);
-                ctx.fillRect(bX + bW - (6 * scaleX), startY, 6 * scaleX, drawH);
+                ctx.fillRect(currentX, startY, profileThick, drawH);
+                ctx.fillRect(currentX + pieceWidth - profileThick, startY, profileThick, drawH);
+                ctx.fillRect(currentX, startY, pieceWidth, motorBoxH); 
+                const panelH = (drawH - motorBoxH) / 3;
+                ctx.fillRect(currentX, startY + motorBoxH + panelH, pieceWidth, profileThick);
+                ctx.fillRect(currentX, startY + motorBoxH + (panelH * 2), pieceWidth, profileThick);
+                ctx.fillRect(currentX, startY + drawH - bottomRailH, pieceWidth, bottomRailH);
             }
-        }
-
-        // Eğer Karma Sistem ise kutuyu böl ve ayırıcı çizgi çek
-        if (data.isCombined) {
-            const sysCount = data.systems.length;
-            const gap = 55 * scaleX; // Sistemler arası ayrımı belirginleştirdik
-            const totalGap = gap * (sysCount - 1);
-            const subBoxW = (totalW - totalGap) / sysCount;
-
-            data.systems.forEach((sys, idx) => {
-                const subBoxX = startX + (idx * (subBoxW + gap));
-                drawSingle(sys, subBoxX, subBoxW);
-
-                // Dikey Ayırıcı Çizgi (Sistemleri birbirinden görsel olarak koparmak için)
-                if (idx < sysCount - 1) {
-                    const sepX = subBoxX + subBoxW + (gap / 2);
-                    ctx.strokeStyle = '#e2e8f0'; // Hafif gri çizgi
-                    ctx.lineWidth = 1.5 * scaleX;
-                    ctx.beginPath();
-                    ctx.moveTo(sepX, startY);
-                    ctx.lineTo(sepX, startY + drawH + (35 * scaleY));
-                    ctx.stroke();
-                }
-            });
         } else {
-            drawSingle(data.systems[0], startX, totalW);
+            let panelCount = Math.ceil(sys.totalW / 65);
+            if (panelCount < 2) panelCount = 2;
+            const panelWidth = bW / panelCount;
+            const profileThick = 3 * scaleX;
+            const railH = 13 * scaleY;
+
+            ctx.fillStyle = profileColor;
+            ctx.fillRect(bX, startY, bW, railH);
+            ctx.fillRect(bX, startY + drawH - railH, bW, railH);
+
+            for (let i = 0; i < panelCount; i++) {
+                const currentX = bX + (i * panelWidth);
+                ctx.fillStyle = glassColor;
+                ctx.fillRect(currentX + profileThick, startY + railH, panelWidth - (profileThick * 2), drawH - (railH * 2));
+                ctx.fillStyle = '#bdc3c7';
+                ctx.fillRect(currentX, startY + railH, profileThick, drawH - (railH * 2));
+                ctx.fillRect(currentX + panelWidth - profileThick, startY + railH, profileThick, drawH - (railH * 2));
+                if (i === 0) {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(currentX + panelWidth - (8 * scaleX), startY + (drawH / 2) - (12 * scaleY), 4 * scaleX, 24 * scaleY);
+                }
+            }
+            ctx.fillStyle = profileColor;
+            ctx.fillRect(bX, startY, 6 * scaleX, drawH);
+            ctx.fillRect(bX + bW - (6 * scaleX), startY, 6 * scaleX, drawH);
         }
     }
 
@@ -650,27 +650,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } else {
             // --- TEKİL VEYA KARMA TEKLİF ---
-
-            // İş Tanımı Tablosu Yazımı (1. Font boyutu sabitlendi ve kalın yapıldı)
             let rowY = 164 * scaleY; 
             const rowHeight = 31.5 * scaleY; 
             lastCalculation.systems.forEach((sys, idx) => {
                 if (idx > 3) return; 
                 ctx.fillStyle = '#1c2649';
-                
-                // Sabit kalın ve okunaklı font
                 ctx.font = `bold ${Math.round(12 * scaleX)}px "Segoe UI", Arial, sans-serif`;
                 ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-                
-                // Taşma olursa maxWidth parametresi ile otomatik sıkıştırılır
                 ctx.fillText(sys.productName, 125 * scaleX, rowY, 412 * scaleX);
                 rowY += rowHeight;
             });
 
-            // Temsili Çizim
+            // Temsili Çizim (Her zaman 1. sistem ortalı çizilir)
             drawSystemSchema(ctx, scaleX, scaleY, lastCalculation);
 
-            // Toplam Alan Metni ("2 Farklı Sistem" silindi)
             let alanText = `${lastCalculation.area} m²`;
             if (lastCalculation.details) {
                 alanText += `  ${lastCalculation.details}`;
@@ -681,7 +674,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             ctx.fillText(alanText, 168 * scaleX, 574 * scaleY);
 
-            // Fiyat
             ctx.fillStyle = '#ffffff';
             fitSingleLineText(ctx, lastCalculation.canvasPriceStr, 380 * scaleX, 34 * scaleX, 22 * scaleX, '"Dela Gothic One", sans-serif');
             const finalPriceSize = parseInt(ctx.font.match(/\d+/)[0], 10);
