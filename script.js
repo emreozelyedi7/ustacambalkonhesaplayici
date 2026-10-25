@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V33 - YENİ ÜRÜN VE ÖZEL YÜKSEKLİK KURALLARI) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V34 - ÇİZİM KOORDİNAT DÜZELTMESİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, priceCash: 122.5, img: "1",
@@ -332,17 +332,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 pricingArea = gResult.pricingArea;
                 calculatedParca = gResult.pieces;
             } else if (pName.includes("sabit doğrama")) {
-                // SABİT DOĞRAMA İÇİN MİN. KURALLAR YOK - GİRİLEN YÜKSEKLİK VE M2 GEÇERLİ
                 pricingArea = (totalW * h) / 10000;
                 calculatedParca = Math.ceil(totalW / 65);
             } else if (pName === "8mm kollu çıtalı sistem katlanır cam balkon" || pName.includes("8mm kollu çıtalı sistem")) {
-                // SADECE BU ÜRÜNE ÖZEL 160 CM MİN. YÜKSEKLİK KURALI
                 let pricingHeight = h < 160 ? 160 : h;
                 pricingArea = (totalW * pricingHeight) / 10000;
                 if (pricingArea < 5) pricingArea = 5;
                 calculatedParca = Math.ceil(totalW / 65);
             } else {
-                // STANDART CAM BALKON KURALLARI (180 cm min. yükseklik, min 5m2)
                 let pricingHeight = h < 180 ? 180 : h;
                 pricingArea = (totalW * pricingHeight) / 10000;
                 if (pricingArea < 5) pricingArea = 5;
@@ -466,16 +463,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- TEKNİK ÇİZİM: HER ZAMAN İLK ÜRÜN (TEK VE ORTALI GÖSTERİM) ---
+    // --- TEKNİK ÇİZİM: ÖLÇÜ ÇİZGİLERİ TAŞMADAN, TAM ORTALI GÖSTERİM ---
     function drawSystemSchema(ctx, scaleX, scaleY, data) {
         const profileColor = '#2c3e50';
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
 
-        // Temel çerçeve güvenli iç koordinatları (Tek çizim için tam genişlik)
-        const startX = 75 * scaleX;
+        // Temel çerçeve güvenli iç koordinatları (Sol boşluk artırıldı, genişlik düşürüldü)
+        const startX = 90 * scaleX; 
         const startY = 320 * scaleY;
-        const totalW = 450 * scaleX; 
+        const totalW = 420 * scaleX; 
         const drawH = 175 * scaleY; 
 
         // Her zaman data.systems[0] (ilk seçilen ürün) baz alınır
@@ -496,13 +493,14 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (12 * scaleY));
 
-        // Sol Dikey Ölçü
-        const dimLeftX = bX - (10 * scaleX);
+        // Sol Dikey Ölçü (Kutuya olan mesafe açıldı)
+        const dimLeftX = bX - (15 * scaleX);
         ctx.beginPath(); ctx.moveTo(dimLeftX, startY); ctx.lineTo(dimLeftX, startY + drawH); ctx.stroke();
         ctx.beginPath(); ctx.arc(dimLeftX, startY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(dimLeftX, startY + drawH, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
+        
         ctx.save();
-        ctx.translate(dimLeftX - (10 * scaleX), startY + (drawH / 2));
+        ctx.translate(dimLeftX - (12 * scaleX), startY + (drawH / 2));
         ctx.rotate(-Math.PI / 2);
         ctx.fillText(`${sys.h}cm`, 0, 0);
         ctx.restore();
