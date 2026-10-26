@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V35 - LİSTE İNDİRME HATASI ÇÖZÜLDÜ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V36 - SABİT PUNTO VE AKILLI SATIR ATLATMA) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, priceCash: 122.5, img: "1",
@@ -30,7 +30,7 @@ const defaultProductsData = {
     }
 };
 
-const STORAGE_KEY = 'myProductsV15'; 
+const STORAGE_KEY = 'myProductsV16'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
@@ -488,21 +488,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
 
-        // Temel çerçeve güvenli iç koordinatları (Sol boşluk artırıldı, genişlik düşürüldü)
+        // Temel çerçeve güvenli iç koordinatları
         const startX = 90 * scaleX; 
         const startY = 320 * scaleY;
         const totalW = 420 * scaleX; 
         const drawH = 175 * scaleY; 
 
-        // Her zaman data.systems[0] (ilk seçilen ürün) baz alınır
         const sys = data.systems[0];
         const bX = startX;
         const bW = totalW;
 
-        // Ölçü Okları
         ctx.strokeStyle = dimColor; ctx.fillStyle = dimColor; ctx.lineWidth = 1.6 * scaleX;
         
-        // Alt Yatay Ölçü
         const dimBottomY = startY + drawH + (11 * scaleY);
         ctx.beginPath(); ctx.moveTo(bX, dimBottomY); ctx.lineTo(bX + bW, dimBottomY); ctx.stroke();
         ctx.beginPath(); ctx.arc(bX, dimBottomY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
@@ -512,7 +509,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (12 * scaleY));
 
-        // Sol Dikey Ölçü
         const dimLeftX = bX - (15 * scaleX);
         ctx.beginPath(); ctx.moveTo(dimLeftX, startY); ctx.lineTo(dimLeftX, startY + drawH); ctx.stroke();
         ctx.beginPath(); ctx.arc(dimLeftX, startY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
@@ -524,7 +520,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillText(`${sys.h}cm`, 0, 0);
         ctx.restore();
 
-        // Sistem Etiketi (Çizimin Altına Yazılır)
         let sysLabel = "CAM BALKON";
         const pNameLower = sys.productName.toLowerCase();
         if (pNameLower.includes("giyotin")) sysLabel = "GİYOTİN";
@@ -535,7 +530,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = `bold ${Math.round(14 * scaleX)}px "Segoe UI", Arial, sans-serif`;
         ctx.fillText(sysLabel, bX + (bW / 2), dimBottomY + (28 * scaleY));
 
-        // Kasa & Cam Çizimi
         if (sys.isGuillotine) {
             const pieceWidth = bW / sys.parcaSayisi;
             const profileThick = 4 * scaleX;
@@ -628,9 +622,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const scaleY = height / 842;
 
         if (lastCalculation.isSpecialList) {
-            // --- ÖZEL ÇEŞİT LİSTESİ ŞABLONU ---
+            // --- ÖZEL ÇEŞİT LİSTESİ (SABİT PUNTO VE AKILLI SATIR ATLATMA EKLENDİ) ---
             ctx.fillStyle = '#1c2649';
-            fitSingleLineText(ctx, lastCalculation.multiTitle, 410 * scaleX, 13 * scaleX, 9 * scaleX, '"OCR A Extended", monospace');
+            ctx.font = `bold ${Math.round(13 * scaleX)}px "OCR A Extended", monospace`;
             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
             ctx.fillText(lastCalculation.multiTitle, 125 * scaleX, 164 * scaleY);
 
@@ -643,16 +637,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let startY = 356 * scaleY;
             lastCalculation.multiResults.forEach(item => {
+                // Ürün ismi yazımı (Punto sabitlendi, uzun isimler alt satıra atılır)
                 ctx.fillStyle = '#1e293b';
-                fitSingleLineText(ctx, item.name, 315 * scaleX, 11.5 * scaleX, 8.5 * scaleX, '"OCR A Extended", monospace');
+                ctx.font = `bold ${Math.round(12.5 * scaleX)}px "Segoe UI", Arial, sans-serif`;
                 ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-                ctx.fillText(item.name, 68 * scaleX, startY);
+                
+                const maxNameWidth = 330 * scaleX; // Fiyata çarpmaması için maksimum genişlik sınırı
+                let words = item.name.split(' ');
+                let line1 = '', line2 = '';
+                
+                // Kelimeleri genişliğe göre iki satıra paylaştır
+                for (let w of words) {
+                    if (!line2 && ctx.measureText(line1 + w + ' ').width <= maxNameWidth) {
+                        line1 += w + ' ';
+                    } else {
+                        line2 += w + ' ';
+                    }
+                }
+                
+                if (line2.trim() === '') {
+                    // Tek satıra sığdıysa normal yaz
+                    ctx.fillText(line1.trim(), 68 * scaleX, startY);
+                } else {
+                    // İki satıra taştıysa alt alta yaz
+                    ctx.fillText(line1.trim(), 68 * scaleX, startY - (7 * scaleY));
+                    ctx.fillText(line2.trim(), 68 * scaleX, startY + (9 * scaleY));
+                }
 
+                // Fiyat kısmı sağa dayalı
                 ctx.fillStyle = '#1c2649';
                 ctx.font = `400 ${Math.round(14 * scaleX)}px "Dela Gothic One", sans-serif`;
                 ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
                 ctx.fillText(item.formattedPrice, 528 * scaleX, startY);
-                startY += 40 * scaleY;
+                
+                startY += 45 * scaleY; // Satırlar arası boşluk rahatlatıldı
             });
 
             ctx.fillStyle = '#1c2649';
@@ -714,7 +732,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const canvas = await createCanvasImage();
             if(!canvas) return;
             
-            // LİSTE HATASI BURADA ÇÖZÜLDÜ
             let fileName = "Teklif.jpg";
             if (lastCalculation.isSpecialList) {
                 fileName = "Fiyat_Listesi.jpg";
