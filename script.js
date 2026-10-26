@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V34 - ÇİZİM KOORDİNAT DÜZELTMESİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V35 - LİSTE İNDİRME HATASI ÇÖZÜLDÜ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, priceCash: 122.5, img: "1",
@@ -454,12 +454,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if(shareVideoBtn) {
         shareVideoBtn.addEventListener('click', async () => {
-            if (!lastCalculation || !lastCalculation.productVideo) {
-                alert("Önce hesaplama yapınız veya video içeren bir ürün seçiniz."); return;
+            let videoUrl = "";
+            let pName = "";
+            let allProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProductsData;
+
+            if (lastCalculation) {
+                if (lastCalculation.isSpecialList) {
+                    let data8mm = allProducts["Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon"];
+                    if(data8mm) {
+                        videoUrl = data8mm.video;
+                        pName = "Cam Balkon Örnek Tanıtımı";
+                    }
+                } else if (lastCalculation.productVideo) {
+                    videoUrl = lastCalculation.productVideo;
+                    pName = lastCalculation.productName;
+                }
             }
-            const shareData = { title: "Tanıtım", text: `Tanıtım Videosu:\n${lastCalculation.productVideo}` };
+
+            if (!videoUrl) {
+                 alert("Video paylaşmak için lütfen listeden video içeren bir ürün seçiniz.");
+                 return;
+            }
+
+            const shareData = { title: pName, text: `Tanıtım Videosu:\n${videoUrl}` };
             if (navigator.share) { try { await navigator.share(shareData); } catch(e){} }
-            else { navigator.clipboard.writeText(lastCalculation.productVideo); alert("Link kopyalandı."); }
+            else { navigator.clipboard.writeText(`${pName} Video: ${videoUrl}`); alert("Link kopyalandı."); }
         });
     }
 
@@ -493,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(`${sys.totalW}cm`, bX + (bW / 2), dimBottomY + (12 * scaleY));
 
-        // Sol Dikey Ölçü (Kutuya olan mesafe açıldı)
+        // Sol Dikey Ölçü
         const dimLeftX = bX - (15 * scaleX);
         ctx.beginPath(); ctx.moveTo(dimLeftX, startY); ctx.lineTo(dimLeftX, startY + drawH); ctx.stroke();
         ctx.beginPath(); ctx.arc(dimLeftX, startY, 2.5 * scaleX, 0, Math.PI * 2); ctx.fill();
@@ -694,7 +713,17 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadBtn.addEventListener('click', async () => {
             const canvas = await createCanvasImage();
             if(!canvas) return;
-            let fileName = lastCalculation.isCombined ? "Karma-Teklif.jpg" : `Teklif-${lastCalculation.systems[0].productName.replace(/ /g,"-")}.jpg`;
+            
+            // LİSTE HATASI BURADA ÇÖZÜLDÜ
+            let fileName = "Teklif.jpg";
+            if (lastCalculation.isSpecialList) {
+                fileName = "Fiyat_Listesi.jpg";
+            } else if (lastCalculation.isCombined) {
+                fileName = "Karma-Teklif.jpg";
+            } else {
+                fileName = `Teklif-${lastCalculation.systems[0].productName.replace(/ /g,"-")}.jpg`;
+            }
+            
             const link = document.createElement('a');
             link.download = fileName;
             link.href = canvas.toDataURL('image/jpeg', 0.95);
