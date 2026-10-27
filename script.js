@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V36 - SABİT PUNTO VE AKILLI SATIR ATLATMA) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V37 - EKRAN LİSTESİ GERİ GELDİ & ÇITALI FİLTRELENDİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCard: 149, priceCash: 122.5, img: "1",
@@ -377,7 +377,13 @@ document.addEventListener('DOMContentLoaded', function() {
             let realArea = (targetData.totalW * targetData.h) / 10000;
 
             const isGlassOnly = (specialListType === "GLASS_BALCONY_VARIANTS");
-            const filterGlass = ["8mm Kollu Çıtalı Sistem Katlanır Cam Balkon", "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon"];
+            
+            // 8mm Çıtalı ürün listeden dışlandı
+            const filterGlass = [
+                "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", 
+                "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", 
+                "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon"
+            ];
 
             for (let [pName, pData] of Object.entries(allProducts)) {
                 if (isGlassOnly && !filterGlass.includes(pName)) continue;
@@ -418,8 +424,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 multiTitle: isGlassOnly ? "Cam Balkon Sistem Çeşitleri" : "Tüm Cam Balkon & Giyotin Sistemleri"
             };
 
-            resultArea.querySelector('.result-big').textContent = "Çeşit Listesi Hazır";
-            detailInfo.innerHTML = `Alan: ${realArea.toFixed(2)} m² <br>Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'}`;
+            // Ekranda (siyah kutuda) gösterilecek liste HTML'i hazırlandı
+            let uiHtmlList = `<ul style="list-style:none; padding:0; margin-top:15px;">`;
+            multiResults.forEach(item => {
+                uiHtmlList += `<li style="margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px; text-align:left;">
+                    <strong style="color:#f8f9fa; font-size:13px;">${item.name}</strong><br>
+                    <span style="color:#4dabf7; font-weight:bold; font-size:16px;">${item.formattedPrice}</span>
+                </li>`;
+            });
+            uiHtmlList += `</ul>`;
+
+            resultArea.querySelector('.result-big').textContent = "Liste Hazır";
+            detailInfo.innerHTML = `Alan: ${realArea.toFixed(2)} m² <br>Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'} ${uiHtmlList}`;
         } 
         else {
             const finalGrandTL = smartRound(grandTotalRaw) + extraPrice;
@@ -444,6 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 productName: combinedSystems.length === 1 ? combinedSystems[0].productName : "Karma Sistem Teklifi"
             };
 
+            // Ekranda tekli veya çoklu sistem detayı anında gösteriliyor
             resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
             detailInfo.innerHTML = `Alan: ${totalAreaGlobal.toFixed(2)} m² <br> Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'} <br> Sistem Sayısı: ${combinedSystems.length} ${extraPrice>0 ? '<br>+ Ek Malzeme Dahil' : ''}`;
         }
@@ -482,13 +499,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- TEKNİK ÇİZİM: ÖLÇÜ ÇİZGİLERİ TAŞMADAN, TAM ORTALI GÖSTERİM ---
     function drawSystemSchema(ctx, scaleX, scaleY, data) {
         const profileColor = '#2c3e50';
         const glassColor = '#eaf2f8';
         const dimColor = '#e74c3c';
 
-        // Temel çerçeve güvenli iç koordinatları
         const startX = 90 * scaleX; 
         const startY = 320 * scaleY;
         const totalW = 420 * scaleX; 
@@ -622,7 +637,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const scaleY = height / 842;
 
         if (lastCalculation.isSpecialList) {
-            // --- ÖZEL ÇEŞİT LİSTESİ (SABİT PUNTO VE AKILLI SATIR ATLATMA EKLENDİ) ---
             ctx.fillStyle = '#1c2649';
             ctx.font = `bold ${Math.round(13 * scaleX)}px "OCR A Extended", monospace`;
             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -637,16 +651,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let startY = 356 * scaleY;
             lastCalculation.multiResults.forEach(item => {
-                // Ürün ismi yazımı (Punto sabitlendi, uzun isimler alt satıra atılır)
                 ctx.fillStyle = '#1e293b';
                 ctx.font = `bold ${Math.round(12.5 * scaleX)}px "Segoe UI", Arial, sans-serif`;
                 ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
                 
-                const maxNameWidth = 330 * scaleX; // Fiyata çarpmaması için maksimum genişlik sınırı
+                const maxNameWidth = 330 * scaleX;
                 let words = item.name.split(' ');
                 let line1 = '', line2 = '';
                 
-                // Kelimeleri genişliğe göre iki satıra paylaştır
                 for (let w of words) {
                     if (!line2 && ctx.measureText(line1 + w + ' ').width <= maxNameWidth) {
                         line1 += w + ' ';
@@ -656,21 +668,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (line2.trim() === '') {
-                    // Tek satıra sığdıysa normal yaz
                     ctx.fillText(line1.trim(), 68 * scaleX, startY);
                 } else {
-                    // İki satıra taştıysa alt alta yaz
                     ctx.fillText(line1.trim(), 68 * scaleX, startY - (7 * scaleY));
                     ctx.fillText(line2.trim(), 68 * scaleX, startY + (9 * scaleY));
                 }
 
-                // Fiyat kısmı sağa dayalı
                 ctx.fillStyle = '#1c2649';
                 ctx.font = `400 ${Math.round(14 * scaleX)}px "Dela Gothic One", sans-serif`;
                 ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
                 ctx.fillText(item.formattedPrice, 528 * scaleX, startY);
                 
-                startY += 45 * scaleY; // Satırlar arası boşluk rahatlatıldı
+                startY += 45 * scaleY; 
             });
 
             ctx.fillStyle = '#1c2649';
@@ -684,7 +693,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText("SEÇENEKLİ TEKLİF", width / 2, 636 * scaleY);
 
         } else {
-            // --- TEKİL VEYA KARMA TEKLİF ---
             let rowY = 164 * scaleY; 
             const rowHeight = 31.5 * scaleY; 
             lastCalculation.systems.forEach((sys, idx) => {
@@ -696,7 +704,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 rowY += rowHeight;
             });
 
-            // Temsili Çizim (Her zaman 1. sistem ortalı çizilir)
             drawSystemSchema(ctx, scaleX, scaleY, lastCalculation);
 
             let alanText = `${lastCalculation.area} m²`;
