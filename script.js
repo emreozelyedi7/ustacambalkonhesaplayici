@@ -1,36 +1,36 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V37 - EKRAN LİSTESİ GERİ GELDİ & ÇITALI FİLTRELENDİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V39 - SABİT DOĞRAMA FİYAT GÜNCELLEMESİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
-        priceCard: 149, priceCash: 122.5, img: "1",
+        priceCard: 170, priceCash: 140, img: "1",
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        priceCard: 185, priceCash: 165, img: "1", 
+        priceCard: 200, priceCash: 170, img: "1", 
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        priceCard: 210, priceCash: 185, img: "2",
+        priceCard: 240, priceCash: 200, img: "2",
         video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        priceCard: 265, priceCash: 235, img: "4",
+        priceCard: 300, priceCash: 250, img: "4",
         video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Temizlenebilir Giyotin": {
-        priceCard: 290, priceCash: 255, img: "3",
+        priceCard: 325, priceCash: 270, img: "3",
         video: "https://www.instagram.com/reel/Ch1eC1wjgeL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
-        priceCard: 210, priceCash: 185, img: "5",
+        priceCard: 240, priceCash: 200, img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Alüminyum Sabit Doğrama": {
-        priceCard: 130, priceCash: 105, img: "6",
+        priceCard: 140, priceCash: 115, img: "6",
         video: ""
     }
 };
 
-const STORAGE_KEY = 'myProductsV16'; 
+const STORAGE_KEY = 'myProductsV18'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
@@ -378,7 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const isGlassOnly = (specialListType === "GLASS_BALCONY_VARIANTS");
             
-            // 8mm Çıtalı ürün listeden dışlandı
             const filterGlass = [
                 "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", 
                 "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", 
@@ -424,7 +423,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 multiTitle: isGlassOnly ? "Cam Balkon Sistem Çeşitleri" : "Tüm Cam Balkon & Giyotin Sistemleri"
             };
 
-            // Ekranda (siyah kutuda) gösterilecek liste HTML'i hazırlandı
             let uiHtmlList = `<ul style="list-style:none; padding:0; margin-top:15px;">`;
             multiResults.forEach(item => {
                 uiHtmlList += `<li style="margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px; text-align:left;">
@@ -460,7 +458,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 productName: combinedSystems.length === 1 ? combinedSystems[0].productName : "Karma Sistem Teklifi"
             };
 
-            // Ekranda tekli veya çoklu sistem detayı anında gösteriliyor
             resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
             detailInfo.innerHTML = `Alan: ${totalAreaGlobal.toFixed(2)} m² <br> Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'} <br> Sistem Sayısı: ${combinedSystems.length} ${extraPrice>0 ? '<br>+ Ek Malzeme Dahil' : ''}`;
         }
