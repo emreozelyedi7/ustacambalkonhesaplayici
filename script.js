@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V41 - 8 TAKSİT ŞABLON DESTEĞİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V42 - SABİT DOĞRAMA FİYAT GÜNCELLEMESİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCash3: 7000, priceCard5: 7250, priceCard8: 7600, img: "1",
@@ -25,12 +25,12 @@ const defaultProductsData = {
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Alüminyum Sabit Doğrama": {
-        priceCash3: 4000, priceCard5: 4500, priceCard8: 5000, img: "6", 
+        priceCash3: 6000, priceCard5: 7350, priceCard8: 7500, img: "6", 
         video: ""
     }
 };
 
-const STORAGE_KEY = 'myProductsV19'; 
+const STORAGE_KEY = 'myProductsV20'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
@@ -618,17 +618,12 @@ document.addEventListener('DOMContentLoaded', function() {
             await document.fonts.load('40px "Dela Gothic One"');
         } catch(e) {}
 
-        // --- ŞABLON SEÇİM MANTIĞI EKLENDİ ---
-        let templateSrc = 'sablon-nakit.jpg'; 
-        if (lastCalculation.paymentType === 'card5') {
-            templateSrc = 'sablon-taksit.jpg';
-        } else if (lastCalculation.paymentType === 'card8') {
-            templateSrc = 'sablon-taksit-8.jpg';
-        }
+        const isCash = lastCalculation.paymentType === 'cash3';
+        const templateSrc = isCash ? 'sablon-nakit.jpg' : (lastCalculation.paymentType === 'card5' ? 'sablon-taksit.jpg' : 'sablon-taksit-8.jpg');
 
         let bgImage;
         try { bgImage = await loadImage(templateSrc); } 
-        catch (err) { alert(`Şablon bulunamadı (${templateSrc}). Lütfen dosyayı yüklediğinizden emin olun.`); return null; }
+        catch (err) { alert("Şablon bulunamadı."); return null; }
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
