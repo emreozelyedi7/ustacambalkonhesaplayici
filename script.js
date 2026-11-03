@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V40 - TL BAZLI VE 3 ÖDEME BAREMİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V41 - 8 TAKSİT ŞABLON DESTEĞİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCash3: 7000, priceCard5: 7250, priceCard8: 7600, img: "1",
@@ -25,7 +25,7 @@ const defaultProductsData = {
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Alüminyum Sabit Doğrama": {
-        priceCash3: 4000, priceCard5: 4500, priceCard8: 5000, img: "6", // Tahmini TL girildi, ayardan düzeltebilirsin
+        priceCash3: 4000, priceCard5: 4500, priceCard8: 5000, img: "6", 
         video: ""
     }
 };
@@ -143,7 +143,6 @@ document.addEventListener('DOMContentLoaded', function() {
         navSettings.classList.add('active');
     });
 
-    // Final tutarı 450 veya 850'ye yuvarlama mantığı korunmuştur.
     function smartRound(amount) {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
@@ -345,7 +344,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let realArea = (totalW * h) / 10000;
             totalAreaGlobal += realArea;
 
-            // TL Bazlı Fiyat Seçimi (Dolar Çarpımı Kaldırıldı)
             let activePrice = 0;
             if (paymentType === 'cash3') activePrice = selectedData.priceCash3;
             else if (paymentType === 'card5') activePrice = selectedData.priceCard5;
@@ -620,12 +618,17 @@ document.addEventListener('DOMContentLoaded', function() {
             await document.fonts.load('40px "Dela Gothic One"');
         } catch(e) {}
 
-        const isCash = lastCalculation.paymentType === 'cash3';
-        const templateSrc = isCash ? 'sablon-nakit.jpg' : 'sablon-taksit.jpg';
+        // --- ŞABLON SEÇİM MANTIĞI EKLENDİ ---
+        let templateSrc = 'sablon-nakit.jpg'; 
+        if (lastCalculation.paymentType === 'card5') {
+            templateSrc = 'sablon-taksit.jpg';
+        } else if (lastCalculation.paymentType === 'card8') {
+            templateSrc = 'sablon-taksit-8.jpg';
+        }
 
         let bgImage;
         try { bgImage = await loadImage(templateSrc); } 
-        catch (err) { alert("Şablon bulunamadı."); return null; }
+        catch (err) { alert(`Şablon bulunamadı (${templateSrc}). Lütfen dosyayı yüklediğinizden emin olun.`); return null; }
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
