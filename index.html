@@ -9,39 +9,25 @@
   <link rel="apple-touch-icon" href="icon.png">
   <meta name="theme-color" content="#ffffff">
 
-  <!-- GOOGLE FONTS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
 
   <style>
     body { 
-        font-family: 'Segoe UI', sans-serif; 
-        background-color: #f0f2f5; 
-        margin: 0; padding: 0;
-        display: flex; justify-content: center;
-        min-height: 100vh;
+        font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; 
+        margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh;
     }
-    
     .main-wrapper {
-        width: 100%; max-width: 450px;
-        background: white; padding: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        min-height: 100vh;
+        width: 100%; max-width: 450px; background: white; padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1); min-height: 100vh;
     }
-
     .logo-container { text-align: center; margin-bottom: 10px; }
     .logo-container img { max-width: 200px; height: auto; }
-
     label { display: block; margin-top: 10px; font-weight: bold; font-size: 13px; color: #555; }
     input, select { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; transition: border 0.3s;}
     input:focus, select:focus { border-color: #007bff; outline: none; }
-    
     .note { font-size: 11px; color: #888; margin-top: 3px; }
-
-    .rate-box { background-color: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 20px; }
-    .rate-box label { color: #0d47a1; margin-top: 0; }
-    .rate-box input { border-color: #90caf9; font-weight: bold; color: #0d47a1; font-size: 18px; }
 
     button { width: 100%; background-color: #28a745; color: white; padding: 15px; border: none; margin-top: 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s;}
     button:hover { opacity: 0.9; }
@@ -50,12 +36,9 @@
     
     #downloadBtn { background-color: #ff9800; display: none; margin-top: 15px; }
     #shareBtn { background-color: #007bff; display: none; margin-top: 10px; }
-    
     #shareVideoBtn { 
         background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-        color: white;
-        display: none; 
-        margin-top: 10px; 
+        color: white; display: none; margin-top: 10px; 
     }
 
     .result { margin-top: 20px; padding: 20px; background-color: #343a40; border-radius: 8px; text-align: center; color: #fff; }
@@ -66,14 +49,9 @@
     .nav a { text-decoration: none; color: #666; font-size: 14px; cursor: pointer; padding: 10px; }
     .nav a.active { color: #007bff; font-weight: bold; border-bottom: 3px solid #007bff; margin-bottom: -12px; }
 
-    /* Sistem Blokları Stili (Karma Teklif İçin) */
     .system-block {
-        background-color: #fcfcfc;
-        border: 1px solid #e0e0e0;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        position: relative;
+        background-color: #fcfcfc; border: 1px solid #e0e0e0; padding: 15px;
+        border-radius: 8px; margin-bottom: 15px; position: relative;
     }
     .system-title {
         margin: 0 0 10px 0; color: #007bff; font-size: 15px;
@@ -84,7 +62,6 @@
         background-color: #dc3545; color: white; border: none;
         border-radius: 4px; padding: 5px 10px; font-size: 12px; cursor: pointer; width: auto; margin:0;
     }
-
     .width-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;}
     .width-input { flex: 1 1 30%; text-align: center; min-width: 80px; }
     
@@ -93,8 +70,7 @@
     .resetWidthBtn { background-color: #6c757d; padding: 10px; font-size: 13px; margin-top: 0; flex: 1; width: auto;}
 
     #addSystemBtn {
-        background-color: #6c757d; border: 2px dashed #adb5bd; color: white;
-        margin-bottom: 20px;
+        background-color: #6c757d; border: 2px dashed #adb5bd; color: white; margin-bottom: 20px;
     }
 
     .report-section { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin-top: 20px; border-radius: 8px; }
@@ -119,11 +95,6 @@
   </div>
 
   <div id="calc-section" class="container">
-    <div class="rate-box">
-      <label>Dolar Kuru (TL):</label>
-      <input type="number" id="currentRate" placeholder="Örn: 35.00" step="0.01">
-    </div>
-
     <label>Müşteri Adı:</label>
     <input type="text" id="customerName" placeholder="Örn: Ahmet Bey">
 
@@ -133,23 +104,20 @@
         <option value="Instagram">Instagram</option>
         <option value="Tavsiye">Tavsiye / Referans</option>
         <option value="Google">Google / Web</option>
-        <option value="Diğer">Diğer</option>
     </select>
 
-    <label>Ödeme Tipi:</label>
+    <label>Ödeme Tipi (Yeni Liste):</label>
     <select id="globalPaymentType" style="border: 2px solid #007bff; font-weight: bold; color: #007bff;">
-        <option value="card">💳 Kredi Kartı Fiyatı (5 Taksit)</option>
-        <option value="cash">💵 Nakit Fiyatı (İndirimli)</option>
+        <option value="cash3">💵 Nakit veya 3 Taksit Fiyatı</option>
+        <option value="card5">💳 5 Taksit Fiyatı</option>
+        <option value="card8">💳 8 Taksit Fiyatı</option>
     </select>
 
     <hr style="margin: 20px 0; border: 0; border-top: 2px solid #eee;">
 
-    <!-- SİSTEMLER KUTUSU (DİNAMİK) -->
     <div id="systems-container">
-        <!-- Varsayılan 1. Sistem Bloğu -->
         <div class="system-block" data-index="1">
             <h4 class="system-title">1. SİSTEM</h4>
-            
             <label>Ürün Seçin:</label>
             <select class="productSelect">
               <option value="">Seçiniz...</option>
@@ -169,7 +137,6 @@
         </div>
     </div>
 
-    <!-- YENİ SİSTEM EKLEME BUTONU -->
     <button id="addSystemBtn" type="button">➕ Farklı Bir Sistem Daha Ekle (Karma Teklif)</button>
 
     <div class="extra-box">
@@ -194,12 +161,16 @@
   <div id="settings-section" class="container hidden">
     <label>Ürün Adı (Uzun):</label>
     <input type="text" id="newProductName" placeholder="Örn: Yeni Ürün">
-    <label>Resim Dosya Adı (Kısa):</label>
+    <label>Resim Adı (Klasördeki no):</label>
     <input type="text" id="newProductImage" placeholder="Örn: 6">
     <label>Video Linki (Instagram):</label>
     <input type="text" id="newProductVideo" placeholder="https://instagram.com/reel/...">
-    <label>m² Birim Fiyatı ($):</label>
-    <input type="number" id="newProductPrice" placeholder="Örn: 100">
+    
+    <!-- 3 BAREM İÇİN YENİ GİRİŞLER -->
+    <label style="color:#007bff; border-top:1px solid #ddd; padding-top:10px;">m² Birim Fiyatları (TL Olarak):</label>
+    <input type="number" id="newPriceCash3" placeholder="Nakit veya 3 Taksit (₺)">
+    <input type="number" id="newPriceCard5" placeholder="5 Taksit (₺)">
+    <input type="number" id="newPriceCard8" placeholder="8 Taksit (₺)">
 
     <button class="secondary" id="saveProductBtn">KAYDET</button>
     <button onclick="resetDefaultProducts()" style="background-color:#6c757d; margin-top:10px;">🔄 Varsayılan Ürünleri Yükle</button>
@@ -211,13 +182,12 @@
 
     <div class="report-section">
         <h3 style="margin-top:0; color:#856404; text-align:center;">📊 Günlük Tablo</h3>
-        <p style="font-size:12px; color:#856404; text-align:center;">Hesapla butonuna bastığınız her işlem kaydedilir.</p>
         <button id="downloadReportBtn" class="report-btn">📥 Tabloyu İndir (Excel)</button>
         <button id="clearReportBtn" class="danger">🗑️ Tabloyu Temizle</button>
     </div>
   </div>
 </div>
 
-<script src="script.js?v=37"></script>
+<script src="script.js?v=40"></script>
 </body>
 </html>
