@@ -1,36 +1,36 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V39 - SABİT DOĞRAMA FİYAT GÜNCELLEMESİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V40 - TL BAZLI VE 3 ÖDEME BAREMİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
-        priceCard: 170, priceCash: 140, img: "1",
+        priceCash3: 7000, priceCard5: 7250, priceCard8: 7600, img: "1",
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        priceCard: 200, priceCash: 170, img: "1", 
+        priceCash3: 8500, priceCard5: 9000, priceCard8: 9300, img: "1", 
         video: "https://www.instagram.com/reel/CzlHEq1qQLY/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        priceCard: 240, priceCash: 200, img: "2",
+        priceCash3: 9500, priceCard5: 10000, priceCard8: 10500, img: "2",
         video: "https://www.instagram.com/reel/Cj7YXuLK2aD/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Progold Isıcamlı Jaluzili Kollu Kasetli Contalı Sistem Katlanır Cam Balkon": {
-        priceCard: 300, priceCash: 250, img: "4",
+        priceCash3: 13500, priceCard5: 14000, priceCard8: 15000, img: "4",
         video: "https://www.instagram.com/reel/DOI_7MvCNjO/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Temizlenebilir Giyotin": {
-        priceCard: 325, priceCash: 270, img: "3",
+        priceCash3: 12500, priceCard5: 13100, priceCard8: 13650, img: "3",
         video: "https://www.instagram.com/reel/Ch1eC1wjgeL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
-        priceCard: 240, priceCash: 200, img: "5",
+        priceCash3: 9500, priceCard5: 10000, priceCard8: 10500, img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Alüminyum Sabit Doğrama": {
-        priceCard: 140, priceCash: 115, img: "6",
+        priceCash3: 4000, priceCard5: 4500, priceCard8: 5000, img: "6", // Tahmini TL girildi, ayardan düzeltebilirsin
         video: ""
     }
 };
 
-const STORAGE_KEY = 'myProductsV18'; 
+const STORAGE_KEY = 'myProductsV19'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const calcSection = document.getElementById('calc-section');
     const settingsSection = document.getElementById('settings-section');
     
-    const currentRateInput = document.getElementById('currentRate');
     const customerNameInput = document.getElementById('customerName');
     const salesChannelInput = document.getElementById('salesChannel');
     const globalPaymentType = document.getElementById('globalPaymentType');
@@ -63,7 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const newProductName = document.getElementById('newProductName');
     const newProductImage = document.getElementById('newProductImage');
     const newProductVideo = document.getElementById('newProductVideo');
-    const newProductPrice = document.getElementById('newProductPrice');
+    const newPriceCash3 = document.getElementById('newPriceCash3');
+    const newPriceCard5 = document.getElementById('newPriceCard5');
+    const newPriceCard8 = document.getElementById('newPriceCard8');
     const saveProductBtn = document.getElementById('saveProductBtn');
     const deleteSelect = document.getElementById('deleteSelect');
     const deleteProductBtn = document.getElementById('deleteProductBtn');
@@ -71,7 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastCalculation = null;
 
     checkAndLoadDefaults();
-    loadRate();
     
     if(shareVideoBtn) shareVideoBtn.style.display = 'block';
 
@@ -143,11 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
         navSettings.classList.add('active');
     });
 
-    function loadRate() {
-        const savedRate = localStorage.getItem('dollarRate');
-        if (savedRate) currentRateInput.value = savedRate;
-    }
-
+    // Final tutarı 450 veya 850'ye yuvarlama mantığı korunmuştur.
     function smartRound(amount) {
         let integerPart = Math.floor(amount);
         let thousands = Math.floor(integerPart / 1000) * 1000;
@@ -179,16 +175,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = newProductName.value.trim();
         const imgName = newProductImage.value.trim();
         const videoLink = newProductVideo.value.trim();
-        const price = parseFloat(newProductPrice.value);
+        const pCash3 = parseFloat(newPriceCash3.value);
+        const pCard5 = parseFloat(newPriceCard5.value);
+        const pCard8 = parseFloat(newPriceCard8.value);
 
-        if (!name || !imgName || isNaN(price)) { alert("Eksik bilgi girdiniz."); return; }
+        if (!name || !imgName || isNaN(pCash3) || isNaN(pCard5) || isNaN(pCard8)) { 
+            alert("Tüm fiyat alanlarını ve isimleri doldurduğunuzdan emin olun."); return; 
+        }
 
         let products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-        products[name] = { priceCard: price, priceCash: price, img: imgName, video: videoLink };
+        products[name] = { priceCash3: pCash3, priceCard5: pCard5, priceCard8: pCard8, img: imgName, video: videoLink };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 
         alert(`${name} kaydedildi!`);
-        newProductName.value = ''; newProductImage.value = ''; newProductVideo.value = ''; newProductPrice.value = '';
+        newProductName.value = ''; newProductImage.value = ''; newProductVideo.value = ''; 
+        newPriceCash3.value = ''; newPriceCard5.value = ''; newPriceCard8.value = '';
         loadProducts();
     });
 
@@ -201,10 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let delOptionsHTML = '<option value="">Seçiniz...</option>';
 
         for (let [name, data] of Object.entries(products)) {
-            const pCard = data.priceCard || data.price;
-            const pCash = data.priceCash || data.price;
             const val = JSON.stringify({ ...data, name: name });
-            optionsHTML += `<option value='${val}'>${name} (Kart: ${pCard}$ | Nakit: ${pCash}$)</option>`;
+            optionsHTML += `<option value='${val}'>${name} (N/3T: ${data.priceCash3}₺ | 5T: ${data.priceCard5}₺)</option>`;
             delOptionsHTML += `<option value="${name}">${name}</option>`;
         }
 
@@ -288,12 +287,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     calculateBtn.addEventListener('click', () => {
-        const rate = parseFloat(currentRateInput.value);
         const paymentType = globalPaymentType.value;
         const extraName = extraItemNameInput.value.trim();
         const extraPrice = parseFloat(extraItemPriceInput.value) || 0;
-
-        if (isNaN(rate) || rate <= 0) { alert("Lütfen Dolar Kurunu giriniz."); return; }
 
         const blocks = document.querySelectorAll('.system-block');
         let combinedSystems = [];
@@ -349,8 +345,13 @@ document.addEventListener('DOMContentLoaded', function() {
             let realArea = (totalW * h) / 10000;
             totalAreaGlobal += realArea;
 
-            let activePrice = (paymentType === 'cash') ? (selectedData.priceCash || selectedData.priceCard) : (selectedData.priceCard || selectedData.price);
-            let rawTL = (pricingArea * activePrice) * rate;
+            // TL Bazlı Fiyat Seçimi (Dolar Çarpımı Kaldırıldı)
+            let activePrice = 0;
+            if (paymentType === 'cash3') activePrice = selectedData.priceCash3;
+            else if (paymentType === 'card5') activePrice = selectedData.priceCard5;
+            else if (paymentType === 'card8') activePrice = selectedData.priceCard8;
+
+            let rawTL = pricingArea * activePrice;
             grandTotalRaw += rawTL;
 
             combinedSystems.push({
@@ -369,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const fmtTL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        let paymentLabel = paymentType === 'cash3' ? 'Nakit/3 Taksit' : (paymentType === 'card5' ? '5 Taksit' : '8 Taksit');
 
         if (isSpecialListMode) {
             const targetData = combinedSystems[0];
@@ -377,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let realArea = (targetData.totalW * targetData.h) / 10000;
 
             const isGlassOnly = (specialListType === "GLASS_BALCONY_VARIANTS");
-            
             const filterGlass = [
                 "Progold 8mm Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", 
                 "Progold Isıcamlı Kollu Kasetli Contalı Sistem Katlanır Cam Balkon", 
@@ -405,8 +406,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (pricingArea < 5) pricingArea = 5;
                 }
 
-                let activePrice = (paymentType === 'cash') ? (pData.priceCash || pData.priceCard) : (pData.priceCard || pData.price);
-                let rawTotal = (pricingArea * activePrice) * rate;
+                let activePrice = 0;
+                if (paymentType === 'cash3') activePrice = pData.priceCash3;
+                else if (paymentType === 'card5') activePrice = pData.priceCard5;
+                else if (paymentType === 'card8') activePrice = pData.priceCard8;
+
+                let rawTotal = pricingArea * activePrice;
                 let roundedTotal = smartRound(rawTotal) + extraPrice; 
 
                 multiResults.push({ name: pName, totalPrice: roundedTotal, formattedPrice: formatCanvasPrice(roundedTotal) });
@@ -433,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
             uiHtmlList += `</ul>`;
 
             resultArea.querySelector('.result-big').textContent = "Liste Hazır";
-            detailInfo.innerHTML = `Alan: ${realArea.toFixed(2)} m² <br>Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'} ${uiHtmlList}`;
+            detailInfo.innerHTML = `Alan: ${realArea.toFixed(2)} m² <br>Ödeme: ${paymentLabel} ${uiHtmlList}`;
         } 
         else {
             const finalGrandTL = smartRound(grandTotalRaw) + extraPrice;
@@ -459,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             resultArea.querySelector('.result-big').textContent = formattedGrandTotal;
-            detailInfo.innerHTML = `Alan: ${totalAreaGlobal.toFixed(2)} m² <br> Ödeme: ${paymentType === 'cash' ? 'Nakit' : 'Kredi Kartı'} <br> Sistem Sayısı: ${combinedSystems.length} ${extraPrice>0 ? '<br>+ Ek Malzeme Dahil' : ''}`;
+            detailInfo.innerHTML = `Alan: ${totalAreaGlobal.toFixed(2)} m² <br> Ödeme: ${paymentLabel} <br> Sistem Sayısı: ${combinedSystems.length} ${extraPrice>0 ? '<br>+ Ek Malzeme Dahil' : ''}`;
         }
 
         if(downloadBtn) downloadBtn.style.display = 'block';
@@ -615,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await document.fonts.load('40px "Dela Gothic One"');
         } catch(e) {}
 
-        const isCash = lastCalculation.paymentType === 'cash';
+        const isCash = lastCalculation.paymentType === 'cash3';
         const templateSrc = isCash ? 'sablon-nakit.jpg' : 'sablon-taksit.jpg';
 
         let bgImage;
