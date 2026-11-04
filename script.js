@@ -1,4 +1,4 @@
-// --- VARSAYILAN ÜRÜN LİSTESİ (V42 - SABİT DOĞRAMA FİYAT GÜNCELLEMESİ) ---
+// --- VARSAYILAN ÜRÜN LİSTESİ (V43 - SÜRME SİSTEM FİYAT GÜNCELLEMESİ) ---
 const defaultProductsData = {
     "8mm Kollu Çıtalı Sistem Katlanır Cam Balkon": {
         priceCash3: 7000, priceCard5: 7250, priceCard8: 7600, img: "1",
@@ -21,7 +21,7 @@ const defaultProductsData = {
         video: "https://www.instagram.com/reel/Ch1eC1wjgeL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Isıcamlı Sürme Sistem Cam Balkon": {
-        priceCash3: 9500, priceCard5: 10000, priceCard8: 10500, img: "5",
+        priceCash3: 10500, priceCard5: 11000, priceCard8: 11500, img: "5",
         video: "https://www.instagram.com/reel/CbJE-S_q2F2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=="
     },
     "Alüminyum Sabit Doğrama": {
@@ -30,7 +30,7 @@ const defaultProductsData = {
     }
 };
 
-const STORAGE_KEY = 'myProductsV20'; 
+const STORAGE_KEY = 'myProductsV21'; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const navCalc = document.getElementById('nav-calc');
